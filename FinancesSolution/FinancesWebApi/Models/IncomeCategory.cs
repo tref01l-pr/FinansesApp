@@ -7,4 +7,7 @@ public class IncomeCategory
     public float PannedOutlayAmount { get; set; }
     public int IncomeIconId { get; set; }
     public int ColorId { get; set; }
+    public IncomeIcon IncomeIcon { get; set; }
+    public IconColor IconColor { get; set; }
+    private ICollection<IncomeCategory> IncomeCategories { get; set; }
 }

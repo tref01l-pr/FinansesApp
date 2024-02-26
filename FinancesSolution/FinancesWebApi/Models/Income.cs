@@ -7,4 +7,6 @@ public class Income
     public float Amount { get; set; }
     public int IncomeCategoryId { get; set; }
     public DateTime Date { get; set; }
+    public  Account Account { get; set; }
+    public IncomeCategory IncomeCategory { get; set; }
 }
