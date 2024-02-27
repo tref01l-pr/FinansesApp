@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "+9O2bK4ESC3dd0U/RnK/U9OJdh5wif3o5dAG0qbO72/j3Qvwe1pUpB4cu/dDoTYQKXvAJ0+kxcIRxLpwuNAv9Q==",
+  "dgSpecHash": "9HmY4FD1BIXHYeQphiIejZxMLQ4K0Mvbgayljub+qmNxK+W7ECTwbu58syTyvyKI31tWaj46xEWd+xQIeyEGZA==",
   "success": true,
   "projectFilePath": "C:\\Users\\prots\\Desktop\\Everything that was at old Windows\\RiderProjects\\FinansesApp\\FinancesSolution\\FinancesWebApi\\FinancesWebApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\prots\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",
+    "C:\\Users\\prots\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.0\\microsoft.aspnetcore.openapi.8.0.0.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
