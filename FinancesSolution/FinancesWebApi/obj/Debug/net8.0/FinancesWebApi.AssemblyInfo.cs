@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FinancesWebApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3dcd487a08ca5a12b31d261fa64fbf6f95893401")]
 [assembly: System.Reflection.AssemblyProductAttribute("FinancesWebApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FinancesWebApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

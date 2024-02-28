@@ -1,8 +1,11 @@
-﻿namespace FinancesWebApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinancesWebApi.Models;
 
 public class ExpenseCategory
 {
-    public int ExpenseCategoryId { get; set; }
+    [Key]
+    public int Id { get; set; }
     public string Name { get; set; }
     public float? PannedOutlayAmount { get; set; } = null;
     public int ExpenseIconId { get; set; }

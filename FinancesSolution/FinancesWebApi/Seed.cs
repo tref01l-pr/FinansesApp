@@ -116,13 +116,11 @@ namespace FinancesWebApi.Data
                     {
                         UserName = "roman",
                         NormalizedUserName = "ROMAN",
-                        Email = "example@example.com",
+                        Email = "example@example.com", 
                         NormalizedEmail = "EXAMPLE@EXAMPLE.COM",
                         Password = BCrypt.Net.BCrypt.HashPassword("test1"),
                         DateOfRegistration = DateTime.Now,
                         Accounts = new List<Account>(),
-                        Expenses = new List<Expense>(),
-                        Incomes = new List<Income>(),
                         UserSettings = new UserSettings
                         {
                             Language = "English",
@@ -142,9 +140,15 @@ namespace FinancesWebApi.Data
                         Password = BCrypt.Net.BCrypt.HashPassword("test2"),
                         DateOfRegistration = DateTime.Now,
                         Accounts = new List<Account>(),
-                        Expenses = new List<Expense>(),
-                        Incomes = new List<Income>(),
                         UserSettings = new UserSettings()
+                        {
+                            Language = "English",
+                            NoRounding = true,
+                            Theme = "Light",
+                            DecimalSeparator = ".",
+                            FirstDayOfWeek = "Monday",
+                            Currency = "USD"
+                        }
                     },
                 };
 

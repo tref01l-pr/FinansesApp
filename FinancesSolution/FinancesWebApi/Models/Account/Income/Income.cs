@@ -1,8 +1,11 @@
-﻿namespace FinancesWebApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinancesWebApi.Models;
 
 public class Income
 {
-    public int IncomeId { get; set; }
+    [Key]
+    public int Id { get; set; }
     public int AccountId { get; set; }
     public float Amount { get; set; }
     public string Currency { get; set; }

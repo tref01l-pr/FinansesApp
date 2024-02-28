@@ -1,9 +1,12 @@
-﻿namespace FinancesWebApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinancesWebApi.Models;
 
 public class UserSettings
 {
-    public string UserSettingsId { get; set; }
-    public string UserId { get; set; }
+    [Key]
+    public int Id { get; set; }
+    public int UserId { get; set; }
     public string Language { get; set; } = "English";
     public int? DefaultAccountId { get; set; } = null;
     public bool NoRounding { get; set; } = true;

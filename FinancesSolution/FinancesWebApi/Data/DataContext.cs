@@ -25,18 +25,19 @@ namespace FinancesWebApi.Data
                 .HasMany(u => u.Accounts)
                 .WithOne(a => a.User)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Expenses)
-                .WithOne(e => e.Account.User)
+            
+            modelBuilder.Entity<Account>()
+                .HasMany(a => a.Expenses)
+                .WithOne(e => e.Account)
                 .HasForeignKey(e => e.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Incomes)
-                .WithOne(i => i.Account.User)
+            modelBuilder.Entity<Account>()
+                .HasMany(a => a.Incomes)
+                .WithOne(i => i.Account)
                 .HasForeignKey(i => i.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
+
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.UserSettings)
@@ -48,13 +49,13 @@ namespace FinancesWebApi.Data
                 .HasMany(ec => ec.Expenses)
                 .WithOne(e => e.ExpenseCategory)
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasPrincipalKey(ec => new { ec.ExpenseCategoryId, ec.IsDefault });
+                .HasPrincipalKey(ec => new { ec.Id, ec.IsDefault });
 
             modelBuilder.Entity<IncomeCategory>()
                 .HasMany(ic => ic.Incomes)
                 .WithOne(i => i.IncomeCategory)
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasPrincipalKey(ic => new { ic.IncomeCategoryId, ic.IsDefault }); 
+                .HasPrincipalKey(ic => new { ic.Id, ic.IsDefault }); 
         }
     }
 }

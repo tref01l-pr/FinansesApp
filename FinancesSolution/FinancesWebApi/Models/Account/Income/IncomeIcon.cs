@@ -1,7 +1,10 @@
-﻿namespace FinancesWebApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinancesWebApi.Models;
 
 public class IncomeIcon
 {
+    [Key]
     public int Id { get; set; }
     public int IconCategoryId { get; set; }
     public string Name { get; set; }
