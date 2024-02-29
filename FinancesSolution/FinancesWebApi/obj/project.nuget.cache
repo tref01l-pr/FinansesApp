@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "vQie5jWSwvStHqkwKMBKSnANNpW0Kv1OgWBccll48/K8ykAzPK2u6tvdsXi7npGgSh6BAQswGVlRKYHOVyTekw==",
+  "dgSpecHash": "ZdI+8Ebs/5TNQ6Wc28d+H9dM4lkpPQZX+WW/W6ziYrJMb1gmowWTDvyYtrRqO3xktpzJbc8LlTdR8Ty13HuPdw==",
   "success": true,
   "projectFilePath": "C:\\Users\\prots\\Desktop\\Everything that was at old Windows\\RiderProjects\\FinansesApp\\FinancesSolution\\FinancesWebApi\\FinancesWebApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\prots\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
     "C:\\Users\\prots\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",

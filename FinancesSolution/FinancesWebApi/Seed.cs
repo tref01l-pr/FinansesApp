@@ -1,6 +1,7 @@
 ﻿using FinancesWebApi.Models;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace FinancesWebApi.Data
 {
@@ -15,6 +16,27 @@ namespace FinancesWebApi.Data
 
         public void SeedDataContext()
         {
+            if (!_context.CountryPhoneNumbers.Any())
+            {
+                try
+                {
+                    string json = File.ReadAllText("./Data/CountryCodes.json");
+                    List<CountryPhoneNumber> countries = JsonSerializer.Deserialize<List<CountryPhoneNumber>>(json);
+                    
+                    foreach (var country in countries)
+                    {
+                        _context.CountryPhoneNumbers.Add(country);
+                    }
+
+                    _context.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+            
             if (!_context.IconColors.Any())
             {
                 var iconColors = new List<IconColor>
@@ -32,6 +54,97 @@ namespace FinancesWebApi.Data
                     new IconColor { Color = "#9bb58e" },
                     new IconColor { Color = "#bad6ad" },
                     new IconColor { Color = "#d2f1c5" },
+                    
+                    new IconColor { Color = "#2e78cf" },
+                    new IconColor { Color = "#4895dd" },
+                    new IconColor { Color = "#5ea2e1" },
+                    new IconColor { Color = "#73b8e1" },
+                    new IconColor { Color = "#8ad1fd" },
+                    new IconColor { Color = "#a7dcfb" },
+                    
+                    new IconColor { Color = "#2234d2" },
+                    new IconColor { Color = "#3a4de9" },
+                    new IconColor { Color = "#5360fe" },
+                    new IconColor { Color = "#7b8aff" },
+                    new IconColor { Color = "#9ca6ff" },
+                    new IconColor { Color = "#bec4ff" },
+                    
+                    new IconColor { Color = "#ec8208" },
+                    new IconColor { Color = "#fb9904" },
+                    new IconColor { Color = "#f1b109" },
+                    new IconColor { Color = "#e5ba16" },
+                    new IconColor { Color = "#f1cb06" },
+                    new IconColor { Color = "#f2e149" },
+                    
+                    new IconColor { Color = "#eb6f19" },
+                    new IconColor { Color = "#fa7518" },
+                    new IconColor { Color = "#fb8837" },
+                    new IconColor { Color = "#fe9850" },
+                    new IconColor { Color = "#ffab6f" },
+                    new IconColor { Color = "#ffc59d" },
+                    
+                    new IconColor { Color = "#db4d87" },
+                    new IconColor { Color = "#e36094" },
+                    new IconColor { Color = "#e274a1" },
+                    new IconColor { Color = "#fc86b8" },
+                    new IconColor { Color = "#ffa9cc" },
+                    new IconColor { Color = "#ffb7d4" },
+                    
+                    new IconColor { Color = "#e030b9" },
+                    new IconColor { Color = "#e93fc3" },
+                    new IconColor { Color = "#eb54c8" },
+                    new IconColor { Color = "#ec5fcf" },
+                    new IconColor { Color = "#ef7ddd" },
+                    new IconColor { Color = "#ffa3f0" },
+                    
+                    new IconColor { Color = "#19bbc6" },
+                    new IconColor { Color = "#23cbcb" },
+                    new IconColor { Color = "#3dd4df" },
+                    new IconColor { Color = "#49e1d2" },
+                    new IconColor { Color = "#68e5dd" },
+                    new IconColor { Color = "#7bf8e6" },
+                    
+                    new IconColor { Color = "#0c9384" },
+                    new IconColor { Color = "#21b2a1" },
+                    new IconColor { Color = "#35cebc" },
+                    new IconColor { Color = "#4bdecc" },
+                    new IconColor { Color = "#7aebd7" },
+                    new IconColor { Color = "#8bf0de" },
+                    
+                    new IconColor { Color = "#ec494a" },
+                    new IconColor { Color = "#f45454" },
+                    new IconColor { Color = "#fa5a4e" },
+                    new IconColor { Color = "#fd6f63" },
+                    new IconColor { Color = "#ff867d" },
+                    new IconColor { Color = "#feb3ad" },
+                    
+                    new IconColor { Color = "#de2020" },
+                    new IconColor { Color = "#f63635" },
+                    new IconColor { Color = "#ff4855" },
+                    new IconColor { Color = "#fe616a" },
+                    new IconColor { Color = "#fe616a" },
+                    new IconColor { Color = "#ff9ea5" },
+                    
+                    new IconColor { Color = "#9255ce" },
+                    new IconColor { Color = "#9e75d5" },
+                    new IconColor { Color = "#a788d6" },
+                    new IconColor { Color = "#c2a3f3" },
+                    new IconColor { Color = "#d2baf8" },
+                    new IconColor { Color = "#dfc8ff" },
+                    
+                    new IconColor { Color = "#7455cd" },
+                    new IconColor { Color = "#7455cd" },
+                    new IconColor { Color = "#9d7ef3" },
+                    new IconColor { Color = "#b095fe" },
+                    new IconColor { Color = "#b8b1ff" },
+                    new IconColor { Color = "#d3d0ff" },
+                    
+                    new IconColor { Color = "#242424" },
+                    new IconColor { Color = "#414141" },
+                    new IconColor { Color = "#616161" },
+                    new IconColor { Color = "#888888" },
+                    new IconColor { Color = "#a6a6a6" },
+                    new IconColor { Color = "#c9c9c9" },
                 };
 
                 var iconCategories = new List<IconCategory>
@@ -115,9 +228,7 @@ namespace FinancesWebApi.Data
                     new User
                     {
                         UserName = "roman",
-                        NormalizedUserName = "ROMAN",
                         Email = "example@example.com", 
-                        NormalizedEmail = "EXAMPLE@EXAMPLE.COM",
                         Password = BCrypt.Net.BCrypt.HashPassword("test1"),
                         DateOfRegistration = DateTime.Now,
                         Accounts = new List<Account>(),
@@ -134,9 +245,7 @@ namespace FinancesWebApi.Data
                     new User
                     {
                         UserName = "john",
-                        NormalizedUserName = "JOHN",
                         Email = "john@example.com",
-                        NormalizedEmail = "JOHN@EXAMPLE.COM",
                         Password = BCrypt.Net.BCrypt.HashPassword("test2"),
                         DateOfRegistration = DateTime.Now,
                         Accounts = new List<Account>(),

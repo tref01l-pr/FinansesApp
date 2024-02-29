@@ -18,9 +18,23 @@ namespace FinancesWebApi.Data
         public DbSet<IconColor> IconColors { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<UserPhoneNumber> UserPhoneNumbers { get; set; }
+        public DbSet<CountryPhoneNumber> CountryPhoneNumbers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .Property(u => u.UserName)
+                .ValueGeneratedNever();
+            
+            modelBuilder.Entity<User>()
+                .Property(u => u.UserSettingsId)
+                .ValueGeneratedNever();
+            
+            modelBuilder.Entity<User>()
+                .Property(u => u.DateOfRegistration)
+                .ValueGeneratedNever();
+            
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Accounts)
                 .WithOne(a => a.User)

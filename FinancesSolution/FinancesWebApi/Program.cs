@@ -1,4 +1,7 @@
+using System.Text.Json.Serialization;
 using FinancesWebApi.Data;
+using FinancesWebApi.Interfaces;
+using FinancesWebApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancesWebApi;
@@ -12,6 +15,10 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
         builder.Services.AddTransient<Seed>();
+        builder.Services.AddControllers().AddJsonOptions(o =>
+            o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+        builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -45,6 +52,8 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
+        
+        app.MapControllers();
 
         app.Run();
     }
