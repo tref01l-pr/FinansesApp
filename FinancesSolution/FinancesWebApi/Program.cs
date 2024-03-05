@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 using FinancesWebApi.Data;
 using FinancesWebApi.Interfaces;
+using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Repositories;
+using FinancesWebApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancesWebApi;
@@ -13,8 +15,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddAuthorization();
-        builder.Services.AddControllers();
         builder.Services.AddTransient<Seed>();
+        builder.Services.AddTransient<IJwtService, JwtService>();
         builder.Services.AddControllers().AddJsonOptions(o =>
             o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -29,7 +31,7 @@ public class Program
 
         var app = builder.Build();
 
-        if (args.Length == 1 && args[0].ToLower() == "seeddata")
+        if (args.Length == 1 && args[0].ToLower() == "--seeddata")
             SeedData(app);
 
         void SeedData(IHost app)
@@ -50,10 +52,10 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
-        app.UseAuthorization();
         
         app.MapControllers();
+
+        app.UseAuthorization();
 
         app.Run();
     }

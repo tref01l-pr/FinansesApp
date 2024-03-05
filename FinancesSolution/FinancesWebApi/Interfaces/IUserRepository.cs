@@ -1,4 +1,5 @@
-﻿using FinancesWebApi.Models;
+﻿using FinancesWebApi.Dto;
+using FinancesWebApi.Models;
 
 namespace FinancesWebApi.Interfaces;
 
@@ -8,7 +9,11 @@ public interface IUserRepository
     User? GetUser(int userId);
     User? GetUserByName(string userName);
     User? GetUserByEmail(string email);
-    bool UserExists(int userId);
+    User? GetUserByNumber(NumberDto numberDto);
+    bool IsUserExists(int userId);
+    bool IsUserNameExists(string userName);
+    bool IsEmailExists(string email);
+    bool IsNumberExists(NumberDto numberDto);
     bool CreateUser(User user);
     bool UpdateUserEmail(User user);
     bool UpdateUserPhone(User user);

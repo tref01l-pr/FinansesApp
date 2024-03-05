@@ -19,6 +19,9 @@ namespace FinancesWebApi.Data
         public DbSet<User> Users { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
         public DbSet<UserPhoneNumber> UserPhoneNumbers { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        
+        public DbSet<Role> Roles { get; set; }
         public DbSet<CountryPhoneNumber> CountryPhoneNumbers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -27,11 +30,11 @@ namespace FinancesWebApi.Data
                 .Property(u => u.UserName)
                 .ValueGeneratedNever();
             
-            modelBuilder.Entity<User>()
+            /*modelBuilder.Entity<User>()
                 .Property(u => u.UserSettingsId)
-                .ValueGeneratedNever();
+                .ValueGeneratedNever();*/
             
-            modelBuilder.Entity<User>()
+            modelBuilder.Entity<UserSettings>()
                 .Property(u => u.DateOfRegistration)
                 .ValueGeneratedNever();
             
@@ -52,6 +55,18 @@ namespace FinancesWebApi.Data
                 .HasForeignKey(i => i.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId);
+
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId);
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.UserSettings)

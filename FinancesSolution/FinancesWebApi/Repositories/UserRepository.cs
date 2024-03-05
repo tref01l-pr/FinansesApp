@@ -1,6 +1,8 @@
 ﻿using FinancesWebApi.Data;
+using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinancesWebApi.Repositories;
 
@@ -18,30 +20,60 @@ public class UserRepository : IUserRepository
 
     public User? GetUser(int userId) => _context.Users.FirstOrDefault(u => u.Id == userId);
 
-    public User? GetUserByName(string userName) => _context.Users.FirstOrDefault(u => u.UserName == userName.ToLower());
+    public User? GetUserByName(string userName) => _context.Users
+        .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+        .FirstOrDefault(u => u.UserName == userName.ToLower());
 
-    public User? GetUserByEmail(string email) => _context.Users.FirstOrDefault(u => u.Email == email.ToLower());
+    public User? GetUserByEmail(string email) => _context.Users
+        .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+        .FirstOrDefault(u => u.Email == email.ToLower());
 
-    public bool UserExists(int userId) => _context.Users.Any(u => u.Id == userId);
-    
-    
+    public User? GetUserByNumber(NumberDto numberDto) => _context.Users
+        .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+        .FirstOrDefault(u =>
+        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number);
+
+    public bool IsUserExists(int userId) => _context.Users.Any(u => u.Id == userId);
+    public bool IsUserNameExists(string userName) => _context.Users.Any(u => u.UserName == userName.ToLower());
+    public bool IsEmailExists(string email) => _context.Users.Any(u => u.Email == email.ToLower());
+
+    public bool IsNumberExists(NumberDto numberDto) => _context.Users.Any(u =>
+        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number);
 
     public bool CreateUser(User user)
     {
         user.Email = user.Email.ToLower();
         user.UserName = user.UserName.ToLower();
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-        _context.Add(user);
+        var roleEntity = _context.Roles.FirstOrDefault(r => r.Name == "user");
+
+        if (roleEntity == null)
+            return false;
+        
+        var userRole = new UserRole
+        {
+            Role = roleEntity,
+            User = user
+        };
+
+        _context.Add(userRole);
         
         UserSettings userSettings = new UserSettings()
         {
-            UserId = user.Id,
+            NickName = user.UserName,
+            DateOfRegistration = DateTime.Now,
+            User = user
         };
         
         Account defaultAccount = new Account()
         {
-            UserId = user.Id,
-            Title = "Main"
+            User = user,
+            Title = "main",
+            Comments = "Main Account"
         };
         
         user.UserSettings = userSettings;
@@ -64,7 +96,8 @@ public class UserRepository : IUserRepository
 
     public bool DeleteUser(User user)
     {
-        return false;
+        _context.Remove(user);
+        return Save();
     }
 
     public bool Save() => _context.SaveChanges() >= 0;

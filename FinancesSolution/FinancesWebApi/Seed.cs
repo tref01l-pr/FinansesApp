@@ -202,6 +202,13 @@ namespace FinancesWebApi.Data
                         { Name = "Home", IsDefault = true, IncomeIcon = incomeIcons[1], IconColor = iconColors[1] }
                 };
 
+                var roles = new List<Role>
+                {
+                    new Role() { Name = "user" },
+                    new Role() { Name = "admin" },
+                    new Role() { Name = "moderator" }
+                };
+
 
                 try
                 {
@@ -211,6 +218,7 @@ namespace FinancesWebApi.Data
                     _context.ExpenseCategories.AddRange(expenseCategories);
                     _context.IncomeIcons.AddRange(incomeIcons);
                     _context.IncomeCategories.AddRange(incomeCategories);
+                    _context.Roles.AddRange(roles);
 
                     _context.SaveChanges();
                 }
@@ -230,16 +238,10 @@ namespace FinancesWebApi.Data
                         UserName = "roman",
                         Email = "example@example.com", 
                         Password = BCrypt.Net.BCrypt.HashPassword("test1"),
-                        DateOfRegistration = DateTime.Now,
-                        Accounts = new List<Account>(),
-                        UserSettings = new UserSettings
+                        UserRoles = new List<UserRole>
                         {
-                            Language = "English",
-                            NoRounding = true,
-                            Theme = "Light",
-                            DecimalSeparator = ".",
-                            FirstDayOfWeek = "Monday",
-                            Currency = "USD"
+                            new UserRole() {Role = _context.Roles.First(r => r.Name == "user")},
+                            new UserRole() {Role = _context.Roles.First(r => r.Name == "admin")}
                         }
                     },
                     new User
@@ -247,22 +249,32 @@ namespace FinancesWebApi.Data
                         UserName = "john",
                         Email = "john@example.com",
                         Password = BCrypt.Net.BCrypt.HashPassword("test2"),
-                        DateOfRegistration = DateTime.Now,
-                        Accounts = new List<Account>(),
-                        UserSettings = new UserSettings()
+                        UserRoles = new List<UserRole>
                         {
-                            Language = "English",
-                            NoRounding = true,
-                            Theme = "Light",
-                            DecimalSeparator = ".",
-                            FirstDayOfWeek = "Monday",
-                            Currency = "USD"
+                            new UserRole() {Role = _context.Roles.First(r => r.Name == "user")}
                         }
                     },
                 };
 
                 foreach (var user in users)
                 {
+                    var userSettings = new UserSettings
+                    {
+                        NickName = user.UserName,
+                        DateOfRegistration = DateTime.Now,
+                        Language = "English",
+                        NoRounding = true,
+                        Theme = "Light",
+                        DecimalSeparator = ".",
+                        FirstDayOfWeek = "Monday",
+                        Currency = "USD",
+                        User = user
+                    };
+
+                    _context.UserSettings.Add(userSettings);
+
+                    user.UserSettings = userSettings;
+
                     var mainAccount = new Account()
                     {
                         Title = "main",
@@ -273,9 +285,10 @@ namespace FinancesWebApi.Data
                     };
                     user.Accounts.Add(mainAccount);
 
+                    _context.Accounts.Add(mainAccount);
                     _context.Users.Add(user);
                 }
-
+                
                 try
                 {
                     _context.SaveChanges();
