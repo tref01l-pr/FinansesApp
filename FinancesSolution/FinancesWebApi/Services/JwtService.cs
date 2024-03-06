@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
@@ -9,7 +10,7 @@ namespace FinancesWebApi.Services;
 
 public class JwtService(IConfiguration configuration) : IJwtService
 {
-    private string _secureKey = "this is a very secure key1234567";
+    private string _secureKey = "this is a very secure key123456789012345678901234567890123456789012345678901234567890";
 
     public string Generate(User user)
     {
@@ -17,8 +18,6 @@ public class JwtService(IConfiguration configuration) : IJwtService
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
-
-        Console.WriteLine("user.UserRoles = " + user.UserRoles.Count);
         
         foreach (var role in user.UserRoles)
             claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
@@ -39,10 +38,21 @@ public class JwtService(IConfiguration configuration) : IJwtService
         return jwt;
     }
 
+    public RefreshToken GenerateRefreshToken()
+    {
+        var refreshToken = new RefreshToken
+        {
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.Now.AddDays(7)
+        };
+
+        return refreshToken;
+    }
+
     public JwtSecurityToken Verify(string jwt)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_secureKey);
+        var key = Encoding.ASCII.GetBytes(configuration.GetSection("Jwt:Token").Value!);
         tokenHandler.ValidateToken(jwt, new TokenValidationParameters
         {
             IssuerSigningKey = new SymmetricSecurityKey(key),

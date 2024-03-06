@@ -17,6 +17,7 @@ public interface IUserRepository
     bool CreateUser(User user);
     bool UpdateUserEmail(User user);
     bool UpdateUserPhone(User user);
+    bool UpdateUserRefreshToken(User user, RefreshToken newRefreshToken);
     bool DeleteUser(User user);
     bool Save();
 }

@@ -6,41 +6,36 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinancesWebApi.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository(DataContext context) : IUserRepository
 {
-    private readonly DataContext _context;
+    public ICollection<User> GetUsers() => context.Users.OrderBy(u => u.Id).ToList();
 
-    public UserRepository(DataContext context)
-    {
-        _context = context;
-    }
+    public User? GetUser(int userId) => context.Users
+        .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+        .FirstOrDefault(u => u.Id == userId);
 
-
-    public ICollection<User> GetUsers() => _context.Users.OrderBy(u => u.Id).ToList();
-
-    public User? GetUser(int userId) => _context.Users.FirstOrDefault(u => u.Id == userId);
-
-    public User? GetUserByName(string userName) => _context.Users
+    public User? GetUserByName(string userName) => context.Users
         .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
         .FirstOrDefault(u => u.UserName == userName.ToLower());
 
-    public User? GetUserByEmail(string email) => _context.Users
+    public User? GetUserByEmail(string email) => context.Users
         .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
         .FirstOrDefault(u => u.Email == email.ToLower());
 
-    public User? GetUserByNumber(NumberDto numberDto) => _context.Users
+    public User? GetUserByNumber(NumberDto numberDto) => context.Users
         .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
         .FirstOrDefault(u =>
         u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number.ToString());
 
-    public bool IsUserWithIdExists(int userId) => _context.Users.Any(u => u.Id == userId);
-    public bool IsUserWithUserNameExists(string userName) => _context.Users.Any(u => u.UserName == userName.ToLower());
-    public bool IsUserWithEmailExists(string email) => _context.Users.Any(u => u.Email == email.ToLower());
+    public bool IsUserWithIdExists(int userId) => context.Users.Any(u => u.Id == userId);
+    public bool IsUserWithUserNameExists(string userName) => context.Users.Any(u => u.UserName == userName.ToLower());
+    public bool IsUserWithEmailExists(string email) => context.Users.Any(u => u.Email == email.ToLower());
 
-    public bool IsUserWithNumberExists(NumberDto numberDto) => _context.Users.Any(u =>
+    public bool IsUserWithNumberExists(NumberDto numberDto) => context.Users.Any(u =>
         u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number.ToString());
 
     public bool CreateUser(User user)
@@ -49,7 +44,7 @@ public class UserRepository : IUserRepository
         user.UserName = user.UserName.ToLower();
         user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-        var roleEntity = _context.Roles.FirstOrDefault(r => r.Name == "user");
+        var roleEntity = context.Roles.FirstOrDefault(r => r.Name == "user");
 
         if (roleEntity == null)
             return false;
@@ -60,7 +55,7 @@ public class UserRepository : IUserRepository
             User = user
         };
 
-        _context.Add(userRole);
+        context.Add(userRole);
         
         UserSettings userSettings = new UserSettings()
         {
@@ -79,7 +74,7 @@ public class UserRepository : IUserRepository
         user.UserSettings = userSettings;
         user.Accounts.Add(defaultAccount);
 
-        _context.Add(user);
+        context.Add(user);
         
         return Save();
     }
@@ -93,12 +88,24 @@ public class UserRepository : IUserRepository
     {
         return false;
     }
-
-    public bool DeleteUser(User user)
+    
+    public bool UpdateUserRefreshToken(User user, RefreshToken newRefreshToken)
     {
-        _context.Remove(user);
+        user.RefreshToken = newRefreshToken.Token;
+        user.TokenExpires = newRefreshToken.Expires;
+        user.TokenCreated = newRefreshToken.Created;
+
+        context.Update(user);
+
         return Save();
     }
 
-    public bool Save() => _context.SaveChanges() >= 0;
+    public bool DeleteUser(User user)
+    {
+        context.Remove(user);
+        return Save();
+    }
+
+    public bool Save() => context.SaveChanges() >= 0;
+    
 }

@@ -15,7 +15,6 @@ public class MaskConverter : IMaskConverter
         if (masks.Count <= 1) 
             return result;
         
-        
         for (int i = 1; i < masks.Count; i++)
         {
             result += "/" + masks[i];
