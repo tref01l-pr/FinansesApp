@@ -34,14 +34,14 @@ public class UserRepository : IUserRepository
         .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
         .FirstOrDefault(u =>
-        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number);
+        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number.ToString());
 
-    public bool IsUserExists(int userId) => _context.Users.Any(u => u.Id == userId);
-    public bool IsUserNameExists(string userName) => _context.Users.Any(u => u.UserName == userName.ToLower());
-    public bool IsEmailExists(string email) => _context.Users.Any(u => u.Email == email.ToLower());
+    public bool IsUserWithIdExists(int userId) => _context.Users.Any(u => u.Id == userId);
+    public bool IsUserWithUserNameExists(string userName) => _context.Users.Any(u => u.UserName == userName.ToLower());
+    public bool IsUserWithEmailExists(string email) => _context.Users.Any(u => u.Email == email.ToLower());
 
-    public bool IsNumberExists(NumberDto numberDto) => _context.Users.Any(u =>
-        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number);
+    public bool IsUserWithNumberExists(NumberDto numberDto) => _context.Users.Any(u =>
+        u.UserPhoneNumber.CountryCode == numberDto.CountryCode && u.UserPhoneNumber.Number == numberDto.Number.ToString());
 
     public bool CreateUser(User user)
     {

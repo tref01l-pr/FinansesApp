@@ -1,34 +1,24 @@
-﻿using FinancesWebApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
+using FinancesWebApi.Data;
+using FinancesWebApi.Interfaces.Services;
+using FinancesWebApi.Models;
 
-namespace FinancesWebApi.Data
+namespace FinancesWebApi
 {
-    public class Seed
+    public class Seed(DataContext context, IMaskConverter maskConverter)
     {
-        private readonly DataContext _context;
-
-        public Seed(DataContext context)
-        {
-            _context = context;
-        }
-
         public void SeedDataContext()
         {
-            if (!_context.CountryPhoneNumbers.Any())
+            if (!context.CountryPhoneNumbers.Any())
             {
                 try
                 {
-                    string json = File.ReadAllText("./Data/CountryCodes.json");
-                    List<CountryPhoneNumber> countries = JsonSerializer.Deserialize<List<CountryPhoneNumber>>(json);
+                    string json = File.ReadAllText("./Data/CountryCodesWithMasks.json");
+                    List<CountryPhoneNumber> countries = JsonSerializer.Deserialize<List<CountryPhoneNumber>>(json)!;
                     
-                    foreach (var country in countries)
-                    {
-                        _context.CountryPhoneNumbers.Add(country);
-                    }
+                    context.CountryPhoneNumbers.AddRange(countries);
 
-                    _context.SaveChanges();
+                    context.SaveChanges();
                 }
                 catch (Exception e)
                 {
@@ -37,7 +27,7 @@ namespace FinancesWebApi.Data
                 }
             }
             
-            if (!_context.IconColors.Any())
+            if (!context.IconColors.Any())
             {
                 var iconColors = new List<IconColor>
                 {
@@ -212,15 +202,15 @@ namespace FinancesWebApi.Data
 
                 try
                 {
-                    _context.IconColors.AddRange(iconColors);
-                    _context.IconCategories.AddRange(iconCategories);
-                    _context.ExpenseIcons.AddRange(expenseIcons);
-                    _context.ExpenseCategories.AddRange(expenseCategories);
-                    _context.IncomeIcons.AddRange(incomeIcons);
-                    _context.IncomeCategories.AddRange(incomeCategories);
-                    _context.Roles.AddRange(roles);
+                    context.IconColors.AddRange(iconColors);
+                    context.IconCategories.AddRange(iconCategories);
+                    context.ExpenseIcons.AddRange(expenseIcons);
+                    context.ExpenseCategories.AddRange(expenseCategories);
+                    context.IncomeIcons.AddRange(incomeIcons);
+                    context.IncomeCategories.AddRange(incomeCategories);
+                    context.Roles.AddRange(roles);
 
-                    _context.SaveChanges();
+                    context.SaveChanges();
                 }
                 catch (Exception ex)
                 {
@@ -229,7 +219,7 @@ namespace FinancesWebApi.Data
             }
 
 
-            if (!_context.Users.Any())
+            if (!context.Users.Any())
             {
                 var users = new List<User>
                 {
@@ -240,8 +230,8 @@ namespace FinancesWebApi.Data
                         Password = BCrypt.Net.BCrypt.HashPassword("test1"),
                         UserRoles = new List<UserRole>
                         {
-                            new UserRole() {Role = _context.Roles.First(r => r.Name == "user")},
-                            new UserRole() {Role = _context.Roles.First(r => r.Name == "admin")}
+                            new UserRole() {Role = context.Roles.First(r => r.Name == "user")},
+                            new UserRole() {Role = context.Roles.First(r => r.Name == "admin")}
                         }
                     },
                     new User
@@ -251,7 +241,7 @@ namespace FinancesWebApi.Data
                         Password = BCrypt.Net.BCrypt.HashPassword("test2"),
                         UserRoles = new List<UserRole>
                         {
-                            new UserRole() {Role = _context.Roles.First(r => r.Name == "user")}
+                            new UserRole() {Role = context.Roles.First(r => r.Name == "user")}
                         }
                     },
                 };
@@ -271,7 +261,7 @@ namespace FinancesWebApi.Data
                         User = user
                     };
 
-                    _context.UserSettings.Add(userSettings);
+                    context.UserSettings.Add(userSettings);
 
                     user.UserSettings = userSettings;
 
@@ -285,13 +275,13 @@ namespace FinancesWebApi.Data
                     };
                     user.Accounts.Add(mainAccount);
 
-                    _context.Accounts.Add(mainAccount);
-                    _context.Users.Add(user);
+                    context.Accounts.Add(mainAccount);
+                    context.Users.Add(user);
                 }
                 
                 try
                 {
-                    _context.SaveChanges();
+                    context.SaveChanges();
                 }
                 catch (Exception ex)
                 {

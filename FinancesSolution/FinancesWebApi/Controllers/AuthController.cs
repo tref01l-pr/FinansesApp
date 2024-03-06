@@ -21,8 +21,8 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
         if (registerDto == null)
             return BadRequest(ModelState);
 
-        if (userRepository.IsEmailExists(registerDto.Email) ||
-            userRepository.IsUserNameExists(registerDto.UserName))
+        if (userRepository.IsUserWithEmailExists(registerDto.Email) ||
+            userRepository.IsUserWithUserNameExists(registerDto.UserName))
         {
             ModelState.AddModelError("", $"This User already exists");
             return StatusCode(422, ModelState);
@@ -70,9 +70,10 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
             
             if (loginDto.Email != string.Empty)
                 user = userRepository.GetUserByEmail(loginDto.Email);
-            
+
             if (loginDto.Number != null)
                 user = userRepository.GetUserByNumber(loginDto.Number);
+            
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
                 throw new Exception("Invalid UserName or Password");
@@ -97,7 +98,7 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
     {
         var users = userRepository.GetUsers();
         
-        if (!userRepository.IsUserExists(userId))
+        if (!userRepository.IsUserWithIdExists(userId))
             return BadRequest(ModelState);
 
 

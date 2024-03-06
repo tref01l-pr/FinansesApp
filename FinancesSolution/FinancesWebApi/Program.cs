@@ -17,6 +17,7 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddTransient<Seed>();
         builder.Services.AddTransient<IJwtService, JwtService>();
+        builder.Services.AddTransient<IMaskConverter, MaskConverter>();
         builder.Services.AddControllers().AddJsonOptions(o =>
             o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

@@ -10,10 +10,10 @@ public interface IUserRepository
     User? GetUserByName(string userName);
     User? GetUserByEmail(string email);
     User? GetUserByNumber(NumberDto numberDto);
-    bool IsUserExists(int userId);
-    bool IsUserNameExists(string userName);
-    bool IsEmailExists(string email);
-    bool IsNumberExists(NumberDto numberDto);
+    bool IsUserWithIdExists(int userId);
+    bool IsUserWithUserNameExists(string userName);
+    bool IsUserWithEmailExists(string email);
+    bool IsUserWithNumberExists(NumberDto numberDto);
     bool CreateUser(User user);
     bool UpdateUserEmail(User user);
     bool UpdateUserPhone(User user);

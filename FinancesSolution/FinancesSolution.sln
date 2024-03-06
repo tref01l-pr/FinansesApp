@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesWebApi", "FinancesWebApi\FinancesWebApi.csproj", "{5D5C95C5-8CE7-4C28-99C9-57F2E8977C50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesWebApi.Tests", "FinancesWebApi.Tests\FinancesWebApi.Tests.csproj", "{B693F536-BB65-45E8-BB09-62D007A7B7C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{5D5C95C5-8CE7-4C28-99C9-57F2E8977C50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D5C95C5-8CE7-4C28-99C9-57F2E8977C50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D5C95C5-8CE7-4C28-99C9-57F2E8977C50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B693F536-BB65-45E8-BB09-62D007A7B7C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B693F536-BB65-45E8-BB09-62D007A7B7C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B693F536-BB65-45E8-BB09-62D007A7B7C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B693F536-BB65-45E8-BB09-62D007A7B7C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
