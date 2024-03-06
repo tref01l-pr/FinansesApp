@@ -13,8 +13,8 @@ namespace FinancesWebApi.Controllers;
 [ApiController]
 public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUserRepository userRepository, IMapper mapper, IMaskConverter maskConverter) : ControllerBase
 {
-    [HttpGet("getCountryNumbersWithMasks")]
-    public IActionResult GetCountryNumbersWithMasks()
+    [HttpGet("getCountriesNumbersWithMasks")]
+    public IActionResult GetCountriesNumbersWithMasks()
     {
         var countryNumbers = mapper.Map<List<NumberWithMaskDto>>(numberRepository.GetCountryPhoneNumbers());
         
@@ -27,31 +27,8 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
     [HttpPost("createUserNumber")]
     public IActionResult CreateUserNumber([FromBody] NumberDto numberDto)
     {
-        if (numberRepository.IsNumberExists(numberDto.CountryCode, numberDto.Number.ToString()))
-        {
-            ModelState.AddModelError("", $"Number already exists");
-            return StatusCode(409, ModelState);
-        }
-
-        if (!userRepository.IsUserWithIdExists(numberDto.UserId))
-        {
-            ModelState.AddModelError("", "User not found");
-            return StatusCode(404, ModelState);
-        }
-        
-        if (!numberRepository.IsCountryCodeExists(numberDto.CountryCode))
-        {
-            ModelState.AddModelError("", $"No country with this code");
-            return StatusCode(404, ModelState);
-        }
-
-        CountryPhoneNumber countryPhoneNumber = numberRepository.GetCountryPhoneNumber(numberDto.CountryCode);
-
-        if (!maskConverter.NumberIsValid(countryPhoneNumber.Mask, numberDto.Number))
-        {
-            ModelState.AddModelError("", $"Incorrect number");
-            return StatusCode(422, ModelState);
-        }
+        if (!ValidateNumber(numberDto, out var validationResult))
+            return validationResult;
 
         var numberMap = mapper.Map<UserPhoneNumber>(numberDto);
         
@@ -67,47 +44,67 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
     [HttpPost("updateUserNumber")]
     public IActionResult UpdateUserNumber([FromBody] NumberDto numberDto)
     {
+        if (!ValidateNumber(numberDto, out var validationResult))
+        {
+            return validationResult;
+        }
+
+        var numberToUpdate = numberRepository.GetPhoneNumberWithUserId(numberDto.UserId);
+        if (numberToUpdate == null)
+        {
+            ModelState.AddModelError("", "User number not found");
+            return StatusCode(404, ModelState);
+        }
+
+        UpdateUserPhoneNumber(numberToUpdate, numberDto);
+
+        if (!numberRepository.UpdateUserNumber(numberToUpdate))
+        {
+            ModelState.AddModelError("", "Failed to update user number");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Number was updated");
+    }
+
+    private bool ValidateNumber(NumberDto numberDto, out IActionResult validationResult)
+    {
         if (numberRepository.IsNumberExists(numberDto.CountryCode, numberDto.Number.ToString()))
         {
-            ModelState.AddModelError("", $"Number exists");
-            return StatusCode(409, ModelState);
+            validationResult = StatusCode(409, "Number already exists");
+            return false;
         }
 
         if (!userRepository.IsUserWithIdExists(numberDto.UserId))
         {
-            ModelState.AddModelError("", "User not found");
-            return StatusCode(404, ModelState);
+            validationResult = StatusCode(404, "User not found");
+            return false;
         }
 
-        /*if (userRepository.GetUser(numberDto.UserId)!.Id != numberDto.UserId)          //Should compare with jwt tokens
+        if (!numberRepository.IsCountryCodeExists(numberDto.CountryCode))                        
         {
-            ModelState.AddModelError("", "Something went wrong");
-            return StatusCode(404, ModelState);
-        }*/
+            validationResult = StatusCode(404, $"No country with code {numberDto.CountryCode}");
+            return false;
+        }
+
+        //Add Verification for user with jwt
         
-        if (!numberRepository.IsCountryCodeExists(numberDto.CountryCode))
-        {
-            ModelState.AddModelError("", $"No country with this code");
-            return StatusCode(404, ModelState);
-        }
-
         CountryPhoneNumber countryPhoneNumber = numberRepository.GetCountryPhoneNumber(numberDto.CountryCode);
-
         if (!maskConverter.NumberIsValid(countryPhoneNumber.Mask, numberDto.Number))
         {
-            ModelState.AddModelError("", $"Incorrect number");
-            return StatusCode(422, ModelState);
+            validationResult = StatusCode(422, "Incorrect number format");
+            return false;
         }
 
-        var numberMap = mapper.Map<UserPhoneNumber>(numberDto);
-        
-        if (!numberRepository.UpdateUserNumber(numberMap))
-        {
-            ModelState.AddModelError("", "Something went wrong");
-            return StatusCode(500, ModelState);
-        }
-
-        return Ok("Number was accepted");
+        validationResult = null;
+        return true;
     }
+
+    private void UpdateUserPhoneNumber(UserPhoneNumber userPhoneNumber, NumberDto numberDto)
+    {
+        userPhoneNumber.Number = numberDto.Number;
+        userPhoneNumber.CountryCode = numberDto.CountryCode;
+    }
+
     
 }

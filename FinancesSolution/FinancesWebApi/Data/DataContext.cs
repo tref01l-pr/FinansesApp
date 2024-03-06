@@ -18,7 +18,7 @@ namespace FinancesWebApi.Data
         public DbSet<IconColor> IconColors { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
-        public DbSet<UserPhoneNumber> UserPhoneNumbers { get; set; }
+        public DbSet<UserPhoneNumber?> UserPhoneNumbers { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         
         public DbSet<Role> Roles { get; set; }
@@ -84,7 +84,12 @@ namespace FinancesWebApi.Data
                 .HasMany(ic => ic.Incomes)
                 .WithOne(i => i.IncomeCategory)
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasPrincipalKey(ic => new { ic.Id, ic.IsDefault }); 
+                .HasPrincipalKey(ic => new { ic.Id, ic.IsDefault });
+
+            modelBuilder.Entity<CountryPhoneNumber>()
+                .HasMany(cpn => cpn.UserPhoneNumbers)
+                .WithOne(upn => upn.CountryPhoneNumber)
+                .HasForeignKey(upn => upn.CountryCode);
         }
     }
 }

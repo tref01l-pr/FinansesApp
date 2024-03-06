@@ -24,7 +24,7 @@ public class MaskConverter : IMaskConverter
         return result;
     }
 
-    public bool NumberIsValid(string masks, int number) => SplitPhoneNumber(masks).Any(mask => CompareMaskNumber(mask, number.ToString()));
+    public bool NumberIsValid(string masks, string number) => SplitPhoneNumber(masks).Any(mask => CompareMaskNumber(mask, number));
 
     public bool CompareMaskNumber(string mask, string number)
     {
