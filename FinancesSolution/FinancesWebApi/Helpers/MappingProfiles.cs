@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
+using FinancesWebApi.Models.User.UserSettings;
 
 namespace FinancesWebApi.Helpers;
 

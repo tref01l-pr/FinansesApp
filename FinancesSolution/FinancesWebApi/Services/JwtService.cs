@@ -4,14 +4,13 @@ using System.Security.Cryptography;
 using System.Text;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FinancesWebApi.Services;
 
 public class JwtService(IConfiguration configuration) : IJwtService
 {
-    private string _secureKey = "this is a very secure key123456789012345678901234567890123456789012345678901234567890";
-
     public string Generate(User user)
     {
         List<Claim> claims = new List<Claim>

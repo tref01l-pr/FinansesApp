@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
 
 namespace FinancesWebApi.Interfaces.Services;
 

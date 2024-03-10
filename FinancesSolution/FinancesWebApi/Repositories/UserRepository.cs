@@ -2,6 +2,8 @@
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
+using FinancesWebApi.Models.User.UserSettings;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancesWebApi.Repositories;
@@ -87,17 +89,6 @@ public class UserRepository(DataContext context) : IUserRepository
     public bool UpdateUserPhone(User user)
     {
         return false;
-    }
-    
-    public bool UpdateUserRefreshToken(User user, RefreshToken newRefreshToken)
-    {
-        user.RefreshToken = newRefreshToken.Token;
-        user.TokenExpires = newRefreshToken.Expires;
-        user.TokenCreated = newRefreshToken.Created;
-
-        context.Update(user);
-
-        return Save();
     }
 
     public bool DeleteUser(User user)

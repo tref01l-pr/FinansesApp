@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using AutoMapper;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
-using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,9 +13,85 @@ namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IMapper mapper, IJwtService jwtService)
+public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IJwtService jwtService)
     : ControllerBase
 {
+    
+    
+    /*public class BrowserDetails
+    {
+        public string UserAgent { get; set; }
+        public Dictionary<string, string> HttpHeaders { get; set; }
+        public string Referrer { get; set; }
+        public string IPAddress { get; set; }
+        public string Browser { get; set; }
+        public string BrowserVersion { get; set; }
+        public string OperatingSystem { get; set; }
+    }
+
+    [HttpGet("getBrowserDetails")]
+    public BrowserDetails GetBrowserDetails()
+    {
+        var userAgent = Request.Headers["User-Agent"].ToString();
+        var uaParser = Parser.GetDefault();
+        ClientInfo clientInfo = uaParser.Parse(userAgent);
+
+        var browserDetails = new BrowserDetails
+        {
+            UserAgent = userAgent,
+            HttpHeaders = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString()),
+            Referrer = Request.Headers["Referer"].ToString(),
+            IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+            Browser = clientInfo.UA.Family,
+            BrowserVersion = clientInfo.UA.Major,
+            OperatingSystem = clientInfo.OS.Family
+        };
+
+        return browserDetails;
+    }*/
+
+    
+    /*[HttpGet("getInfo")]
+    public ActionResult GetInfo()
+    {
+        string userDetails = 
+    $"User Agent: {Request.UserAgent}\n\n" +
+    $"HTTP Headers: \n{string.Join("\n", Request.Headers.AllKeys.Select(key => $"{key}: {Request.Headers[key]}"))}\n\n" +
+    $"Referrer: {Request.UrlReferrer != null ? Request.UrlReferrer.ToString() : "Unknown"}\n\n" +
+    $"MIME Types: \n{string.Join(", ", Request.Browser.MimeTypes)}\n\n" +
+    $"Client Hints: \n[Not available on server]\n\n" +
+    $"Navigator Platform: {Request.Browser.Platform}\n\n" +
+    $"Operating System: {Environment.OSVersion}\n\n" +
+    $"Screen Size: {Screen.PrimaryScreen.Bounds.Width}x{Screen.PrimaryScreen.Bounds.Height}\n\n" +
+    $"IP Address: {Request.UserHostAddress}\n\n" +
+    $"IP Address Location: [External service needed]\n\n" +
+    $"Local IP Address: [Local network configuration]\n\n" +
+    $"Using TOR: [Not easily detectable on server]\n\n" +
+    $"WiFi: [Not available on server]\n\n" +
+    $"ISP: [External service needed]\n\n" +
+    $"ISP filtering outgoing network ports: [Not easily detectable on server]\n\n" +
+    $"Internet Speed: [External service needed]\n\n" +
+    $"Browser Versions: \n" +
+    $"- Chrome: [Extract from User Agent]\n" +
+    $"- Firefox: [Extract from User Agent]\n" +
+    $"- Safari: [Extract from User Agent]\n" +
+    $"- Internet Explorer: [Extract from User Agent]\n" +
+    $"- Edge: [Extract from User Agent]\n" +
+    $"- Opera: [Extract from User Agent]\n" +
+    $"- Vivaldi: [Extract from User Agent]\n" +
+    $"- Yandex Browser: [Extract from User Agent]\n\n" +
+    $"Operating System Versions: \n" +
+    $"- Chrome OS: [Extract from User Agent]\n" +
+    $"- macOS: [Extract from User Agent]\n" +
+    $"- iOS: [Extract from User Agent]\n" +
+    $"- Windows: [Extract from User Agent]\n" +
+    $"- Android: [Extract from User Agent]\n";
+
+// Теперь вы можете использовать переменную userDetails для вывода информации или ее отображения где-либо еще.
+
+    }*/
+    
+    
     [HttpGet, Authorize(Roles = "user, admin")]
     public ActionResult<string> GetMyName()
     {
@@ -33,7 +110,7 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
         }
         catch (Exception e)
         {
-            ModelState.AddModelError("", $"Something went wrong");
+            ModelState.AddModelError("", $"Something went wrong {e}");
             return StatusCode(500, ModelState);
         }
         
@@ -53,9 +130,6 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
     [ProducesResponseType(400)]
     public IActionResult Register([FromBody] RegisterDto registerDto)
     {
-        if (registerDto == null)
-            return BadRequest(ModelState);
-
         if (userRepository.IsUserWithEmailExists(registerDto.Email) ||
             userRepository.IsUserWithUserNameExists(registerDto.UserName))
         {
@@ -126,7 +200,8 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
             
             SetRefreshToken(refreshToken);
 
-            userRepository.UpdateUserRefreshToken(user, refreshToken);
+            //TODO: сделать проверку на юзер девайс, если такой есть, то обновить данные, если нет, то создать новый
+            //userRepository.UpdateUserRefreshToken(user, refreshToken);
 
             return Ok(token);
         }
@@ -155,29 +230,47 @@ public class AuthController(IUserRepository userRepository, IMapper mapper, IJwt
     }
 
     [HttpPost("refreshToken")]
-    public async Task<ActionResult<string>> RefreshToken(int userId)
+    public async Task<ActionResult<string>> RefreshToken(string? jwtToken)
     {
-        var refreshToken = Request.Cookies["refreshToken"];
-
-        var user = userRepository.GetUser(userId);
-
-        if (user == null || !user.RefreshToken.Equals(refreshToken))
-        {
-            return Unauthorized("Invalid Refresh token");
-        }
+        string? refreshToken = Request.Cookies["refreshToken"];
         
-        if (user.TokenExpires < DateTime.Now)
-        {
-            return Unauthorized("Token expired.");
-        }
+        if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(jwtToken))
+            return Unauthorized("Cannot be Refreshed");
 
-        string token = jwtService.Generate(user);
+        //TODO: Сделать проверку, если нету jwt токена, то сделать проверку данных компьютера и только после всей проверки апдейтнуть accessToken и refreshToken
+        /*if (string.IsNullOrEmpty(jwtToken))
+        {
+            
+        }*/
+
+        JwtSecurityToken token = jwtService.Verify(jwtToken);
+        
+        var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "userId");
+        if (userIdClaim == null || int.TryParse(userIdClaim.Value, out int userId))
+            return Unauthorized("Cannot be refreshed");                                  //incorrect access token
+        
+        var device = deviceRepository.GetDeviceByUserId(userId);
+        
+        if (device == null || !device.Token.Equals(deviceRepository.GetDeviceByRefreshToken(refreshToken).Token))
+            return Unauthorized("Invalid Refresh token");                                //fake access token
+        
+        if (device.TokenExpires < DateTime.Now)
+            return Unauthorized("Token expired.");
+        
+
+        string newToken = jwtService.Generate(userRepository.GetUser(userId)!);
 
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
-        userRepository.UpdateUserRefreshToken(user, newRefreshToken);
-
-        return Ok(token);
+        if (deviceRepository.UpdateRefreshToken(device, newRefreshToken))
+        {
+            ModelState.AddModelError("", "Cannot update Refresh Token");
+            return StatusCode(500, ModelState);
+        }
+        
+        SetRefreshToken(newRefreshToken);
+        
+        return Ok(newToken);
     }
 
     private void SetRefreshToken(RefreshToken newRefreshToken)

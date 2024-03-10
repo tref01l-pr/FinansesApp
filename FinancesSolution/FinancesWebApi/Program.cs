@@ -44,6 +44,7 @@ public class Program
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();
+        builder.Services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
 
         
         builder.Services.AddSwaggerGen(options =>

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using FinancesWebApi.Models.User.UserSettings;
 
-namespace FinancesWebApi.Models
+namespace FinancesWebApi.Models.User
 {
     public class User
     {
@@ -13,12 +14,10 @@ namespace FinancesWebApi.Models
         public int? PhoneNumberId { get; set; } = null;
         public bool PhoneNumberConfirmed { get; set; } = false;
         public int NumberOfPasswordAttempts { get; set; } = 5;
-        public string RefreshToken { get; set; } = string.Empty;
-        public DateTime? TokenCreated { get; set; } = null;
-        public DateTime? TokenExpires { get; set; } = null;
         public required ICollection<UserRole> UserRoles { get; set; }
-        public UserSettings UserSettings { get; set; }
+        public UserSettings.UserSettings UserSettings { get; set; }
         public UserPhoneNumber UserPhoneNumber { get; set; }
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
+        public ICollection<Device> Devices { get; set; } = new List<Device>();
     }
 }

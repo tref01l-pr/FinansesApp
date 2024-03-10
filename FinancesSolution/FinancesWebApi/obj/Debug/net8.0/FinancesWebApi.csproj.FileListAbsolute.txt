@@ -144,3 +144,4 @@ C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\Finanses
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Scrutor.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Swashbuckle.AspNetCore.Filters.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Swashbuckle.AspNetCore.Filters.Abstractions.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\UAParser.dll

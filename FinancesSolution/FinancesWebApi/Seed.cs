@@ -2,6 +2,8 @@
 using FinancesWebApi.Data;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User;
+using FinancesWebApi.Models.User.UserSettings;
 
 namespace FinancesWebApi
 {

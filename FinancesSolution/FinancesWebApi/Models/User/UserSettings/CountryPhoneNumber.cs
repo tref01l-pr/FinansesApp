@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FinancesWebApi.Models;
+namespace FinancesWebApi.Models.User.UserSettings;
 
 public class CountryPhoneNumber
 {

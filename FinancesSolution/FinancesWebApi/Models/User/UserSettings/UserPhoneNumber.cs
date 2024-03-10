@@ -1,4 +1,4 @@
-﻿namespace FinancesWebApi.Models;
+﻿namespace FinancesWebApi.Models.User.UserSettings;
 
 public class UserPhoneNumber
 {
@@ -7,5 +7,5 @@ public class UserPhoneNumber
     public required string CountryCode { get; set; }
     public required string Number { get; set; }
     public CountryPhoneNumber CountryPhoneNumber { get; set; }
-    public User User { get; set; }
+    public Models.User.User User { get; set; }
 }

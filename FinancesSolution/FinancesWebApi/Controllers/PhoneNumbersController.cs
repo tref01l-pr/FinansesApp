@@ -3,6 +3,7 @@ using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
+using FinancesWebApi.Models.User.UserSettings;
 using FinancesWebApi.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;

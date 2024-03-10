@@ -1,4 +1,4 @@
-﻿namespace FinancesWebApi.Models;
+﻿namespace FinancesWebApi.Models.User;
 
 public class RefreshToken
 {

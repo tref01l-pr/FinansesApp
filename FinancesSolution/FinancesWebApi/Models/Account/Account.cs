@@ -11,5 +11,5 @@ public class Account
     public string? Comments { get; set; } = null;
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     public ICollection<Income> Incomes { get; set; } = new List<Income>();
-    public User User { get; set; }
+    public User.User User { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using FinancesWebApi.Models;
+using FinancesWebApi.Models.User.UserSettings;
 
 namespace FinancesWebApi.Interfaces;
 
