@@ -122,7 +122,6 @@ C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\Finanses
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\FinancesWebApi.csproj.CoreCompileInputs.cache
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\FinancesWebApi.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\FinancesWebApi.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\FinancesWebApi.sourcelink.json
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\obj\Debug\net8.0\staticwebassets\msbuild.FinancesWebApi.Microsoft.AspNetCore.StaticWebAssets.props
@@ -144,4 +143,7 @@ C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\Finanses
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Scrutor.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Swashbuckle.AspNetCore.Filters.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Swashbuckle.AspNetCore.Filters.Abstractions.dll
-C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\UAParser.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\JetBrains.Annotations.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.Detection.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.Hosting.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.System.dll

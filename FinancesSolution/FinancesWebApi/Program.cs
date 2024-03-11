@@ -37,6 +37,8 @@ public class Program
         });
         
         builder.Services.AddAuthorization();
+
+        builder.Services.AddDetection();
         
         builder.Services.AddTransient<Seed>();
         builder.Services.AddTransient<IJwtService, JwtService>();

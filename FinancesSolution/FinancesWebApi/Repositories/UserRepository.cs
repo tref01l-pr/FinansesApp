@@ -97,6 +97,6 @@ public class UserRepository(DataContext context) : IUserRepository
         return Save();
     }
 
-    public bool Save() => context.SaveChanges() >= 0;
+    public bool Save() => context.SaveChanges() > 0;
     
 }

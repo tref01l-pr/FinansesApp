@@ -11,11 +11,12 @@ namespace FinancesWebApi.Services;
 
 public class JwtService(IConfiguration configuration) : IJwtService
 {
-    public string Generate(User user)
+    public string Generate(User user, int deviceId)
     {
         List<Claim> claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new ("deviceId", deviceId.ToString())
         };
         
         foreach (var role in user.UserRoles)
@@ -28,7 +29,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.Now.AddDays(1),
+            expires: DateTime.Now.AddHours(2),
             signingCredentials: creds
         );
 

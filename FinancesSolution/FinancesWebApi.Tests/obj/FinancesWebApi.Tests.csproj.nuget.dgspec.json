@@ -52,6 +52,10 @@
               "target": "Package",
               "version": "[17.6.0, )"
             },
+            "Wangkanai.Detection": {
+              "target": "Package",
+              "version": "[8.12.0, )"
+            },
             "coverlet.collector": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -166,6 +170,10 @@
             "Swashbuckle.AspNetCore.Filters": {
               "target": "Package",
               "version": "[8.0.1, )"
+            },
+            "Wangkanai.Detection": {
+              "target": "Package",
+              "version": "[8.12.0, )"
             }
           },
           "imports": [

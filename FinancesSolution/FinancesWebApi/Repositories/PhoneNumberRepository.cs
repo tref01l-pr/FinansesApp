@@ -33,5 +33,5 @@ public class PhoneNumberRepository(DataContext context) : IPhoneNumberRepository
         return Save();
     }
 
-    public bool Save() => context.SaveChanges() >= 0;
+    public bool Save() => context.SaveChanges() > 0;
 }

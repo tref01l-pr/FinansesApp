@@ -8,88 +8,45 @@ using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Wangkanai.Detection.Services;
 
 namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IJwtService jwtService)
+public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IJwtService jwtService, IDetectionService detection)
     : ControllerBase
 {
-    
-    
-    /*public class BrowserDetails
+    public class BrowserDetails
     {
-        public string UserAgent { get; set; }
-        public Dictionary<string, string> HttpHeaders { get; set; }
-        public string Referrer { get; set; }
-        public string IPAddress { get; set; }
-        public string Browser { get; set; }
-        public string BrowserVersion { get; set; }
-        public string OperatingSystem { get; set; }
+        public string State { get; set; } = string.Empty;
+        public void Add(string info) => State += info + " - ";
     }
 
     [HttpGet("getBrowserDetails")]
-    public BrowserDetails GetBrowserDetails()
+    public IActionResult GetBrowserDetails()
     {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        var uaParser = Parser.GetDefault();
-        ClientInfo clientInfo = uaParser.Parse(userAgent);
+        
+        /*string browser_information = detection.Browser.Name.ToString() +
+                                     detection.Browser.Version + detection.Device.Type + detection.;*/
+        
+        BrowserDetails browserDetails = new BrowserDetails();
+        
+        browserDetails.Add(detection.Browser.Name.ToString());
+        browserDetails.Add(detection.Browser.Version.ToString());
+        browserDetails.Add(detection.Device.Type.ToString());
+        browserDetails.Add(detection.Crawler.IsCrawler.ToString());
+        browserDetails.Add(detection.Crawler.Version.ToString());
+        browserDetails.Add(detection.Crawler.Name.ToString());
+        browserDetails.Add(detection.Engine.Name.ToString());
+        browserDetails.Add(detection.Platform.Name.ToString());
+        browserDetails.Add(detection.Platform.Version.ToString());
+        browserDetails.Add(detection.Platform.Processor.ToString());
+        browserDetails.Add(HttpContext.Connection.RemoteIpAddress.ToString());
+        
+        return Ok(browserDetails);
+    }
 
-        var browserDetails = new BrowserDetails
-        {
-            UserAgent = userAgent,
-            HttpHeaders = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString()),
-            Referrer = Request.Headers["Referer"].ToString(),
-            IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-            Browser = clientInfo.UA.Family,
-            BrowserVersion = clientInfo.UA.Major,
-            OperatingSystem = clientInfo.OS.Family
-        };
-
-        return browserDetails;
-    }*/
-
-    
-    /*[HttpGet("getInfo")]
-    public ActionResult GetInfo()
-    {
-        string userDetails = 
-    $"User Agent: {Request.UserAgent}\n\n" +
-    $"HTTP Headers: \n{string.Join("\n", Request.Headers.AllKeys.Select(key => $"{key}: {Request.Headers[key]}"))}\n\n" +
-    $"Referrer: {Request.UrlReferrer != null ? Request.UrlReferrer.ToString() : "Unknown"}\n\n" +
-    $"MIME Types: \n{string.Join(", ", Request.Browser.MimeTypes)}\n\n" +
-    $"Client Hints: \n[Not available on server]\n\n" +
-    $"Navigator Platform: {Request.Browser.Platform}\n\n" +
-    $"Operating System: {Environment.OSVersion}\n\n" +
-    $"Screen Size: {Screen.PrimaryScreen.Bounds.Width}x{Screen.PrimaryScreen.Bounds.Height}\n\n" +
-    $"IP Address: {Request.UserHostAddress}\n\n" +
-    $"IP Address Location: [External service needed]\n\n" +
-    $"Local IP Address: [Local network configuration]\n\n" +
-    $"Using TOR: [Not easily detectable on server]\n\n" +
-    $"WiFi: [Not available on server]\n\n" +
-    $"ISP: [External service needed]\n\n" +
-    $"ISP filtering outgoing network ports: [Not easily detectable on server]\n\n" +
-    $"Internet Speed: [External service needed]\n\n" +
-    $"Browser Versions: \n" +
-    $"- Chrome: [Extract from User Agent]\n" +
-    $"- Firefox: [Extract from User Agent]\n" +
-    $"- Safari: [Extract from User Agent]\n" +
-    $"- Internet Explorer: [Extract from User Agent]\n" +
-    $"- Edge: [Extract from User Agent]\n" +
-    $"- Opera: [Extract from User Agent]\n" +
-    $"- Vivaldi: [Extract from User Agent]\n" +
-    $"- Yandex Browser: [Extract from User Agent]\n\n" +
-    $"Operating System Versions: \n" +
-    $"- Chrome OS: [Extract from User Agent]\n" +
-    $"- macOS: [Extract from User Agent]\n" +
-    $"- iOS: [Extract from User Agent]\n" +
-    $"- Windows: [Extract from User Agent]\n" +
-    $"- Android: [Extract from User Agent]\n";
-
-// Теперь вы можете использовать переменную userDetails для вывода информации или ее отображения где-либо еще.
-
-    }*/
     
     
     [HttpGet, Authorize(Roles = "user, admin")]
@@ -183,25 +140,35 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             if (loginDto.Number != null)
                 user = userRepository.GetUserByNumber(loginDto.Number);
             
-
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
                 throw new Exception("Invalid UserName or Password");
-
-            string token = jwtService.Generate(user);
             
-            Response.Cookies.Append("jwt", "Bearer " + token, new CookieOptions()
-            {
-                Secure = true,
-                HttpOnly = true,
-                Expires = DateTime.Now.AddHours(2)
-            });
-
             RefreshToken refreshToken = jwtService.GenerateRefreshToken();
+
+            Device device = new Device
+            {
+                Ip = HttpContext.Connection.RemoteIpAddress!.ToString(),
+                BrowserName = detection.Browser.Name.ToString(),
+                BrowserVersion = detection.Browser.Version.ToString(),
+                PlatformName = detection.Platform.Name.ToString(),
+                PlatformVersion = detection.Platform.Version.ToString(),
+                PlatformProcessor = detection.Platform.Processor.ToString(),
+                Token = refreshToken.Token,
+                TokenCreated = refreshToken.Created,
+                TokenExpires = refreshToken.Expires,
+                User = user
+            };
+
+            if (!deviceRepository.CreateDevice(device))
+            {
+                ModelState.AddModelError("", $"Cannot create Device");
+                return StatusCode(500, ModelState);
+            }
+            
+            //TODO: Can be incorrect value if it will be used by many people?
+            string token = jwtService.Generate(user, device.Id);
             
             SetRefreshToken(refreshToken);
-
-            //TODO: сделать проверку на юзер девайс, если такой есть, то обновить данные, если нет, то создать новый
-            //userRepository.UpdateUserRefreshToken(user, refreshToken);
 
             return Ok(token);
         }
@@ -230,39 +197,61 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     }
 
     [HttpPost("refreshToken")]
-    public async Task<ActionResult<string>> RefreshToken(string? jwtToken)
+    public async Task<ActionResult<string>> RefreshToken(string? jwtToken = null)
     {
         string? refreshToken = Request.Cookies["refreshToken"];
         
-        if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(jwtToken))
+        if (string.IsNullOrEmpty(refreshToken))
             return Unauthorized("Cannot be Refreshed");
 
-        //TODO: Сделать проверку, если нету jwt токена, то сделать проверку данных компьютера и только после всей проверки апдейтнуть accessToken и refreshToken
-        /*if (string.IsNullOrEmpty(jwtToken))
+        int userId = 0;
+        Device? device = null;
+
+        //TODO: if use check in two places (when we have jwt and don't) jwt stopping be necessary !
+        if (string.IsNullOrEmpty(jwtToken))
         {
+            device = deviceRepository.GetDeviceByRefreshToken(refreshToken);
+            if (device == null)
+                return Unauthorized("No RefreshToken");
+
+            userId = device.UserId;
+
+            if (device.BrowserName != detection.Browser.Name.ToString() ||
+                device.BrowserVersion != detection.Browser.Version.ToString() ||
+                device.PlatformName != detection.Platform.Name.ToString() ||
+                device.PlatformVersion != detection.Platform.Version.ToString() ||
+                device.PlatformProcessor != detection.Platform.Processor.ToString() ||
+                device.TokenExpires < DateTime.Now)
+            {
+                return Unauthorized("Incorrect RefreshToken");
+            }
+        }
+        else
+        {
+            JwtSecurityToken token = jwtService.Verify(jwtToken);
             
-        }*/
+            var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out userId))
+                return Unauthorized("Cannot be refreshed. No userId in Claims");                                  //incorrect access token
 
-        JwtSecurityToken token = jwtService.Verify(jwtToken);
+            var deviceIdClaim = token.Claims.FirstOrDefault(c => c.Type == "deviceId");
+            if (deviceIdClaim == null || !int.TryParse(deviceIdClaim.Value, out int deviceId))
+                return Unauthorized("Cannot be refreshed. No deviceId in Claims");                                  //incorrect access token
         
-        var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "userId");
-        if (userIdClaim == null || int.TryParse(userIdClaim.Value, out int userId))
-            return Unauthorized("Cannot be refreshed");                                  //incorrect access token
+            device = deviceRepository.GetDeviceById(deviceId);
         
-        var device = deviceRepository.GetDeviceByUserId(userId);
+            if (device == null || !device.Token.Equals(deviceRepository.GetDeviceByRefreshToken(refreshToken).Token))
+                return Unauthorized("Invalid Refresh token");                                //fake access token
         
-        if (device == null || !device.Token.Equals(deviceRepository.GetDeviceByRefreshToken(refreshToken).Token))
-            return Unauthorized("Invalid Refresh token");                                //fake access token
+            if (device.TokenExpires < DateTime.Now)
+                return Unauthorized("Token expired.");
+        }
         
-        if (device.TokenExpires < DateTime.Now)
-            return Unauthorized("Token expired.");
-        
-
-        string newToken = jwtService.Generate(userRepository.GetUser(userId)!);
+        string newToken = jwtService.Generate(userRepository.GetUser(userId)!, device.Id);
 
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
-        if (deviceRepository.UpdateRefreshToken(device, newRefreshToken))
+        if (!deviceRepository.UpdateRefreshToken(device, newRefreshToken))
         {
             ModelState.AddModelError("", "Cannot update Refresh Token");
             return StatusCode(500, ModelState);
