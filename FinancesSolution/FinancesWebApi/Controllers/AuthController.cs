@@ -1,23 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using AutoMapper;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models.User;
-using FinancesWebApi.Models.User.UserSettings;
-using FinancesWebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Wangkanai.Detection.Services;
 
 namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IDetectionService detection)
+public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IPhoneNumberService phoneNumberService, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IEmailSender emailSender, IDetectionService detection)
     : ControllerBase
 {
     public class BrowserDetails
@@ -88,7 +86,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     [HttpPost("register")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
-    public IActionResult Register([FromBody] RegisterDto registerDto)
+    public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
     {
         /*var email = new EmailAddressAttribute();
         if (!email.IsValid(registerDto.Email))
@@ -120,7 +118,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             VerificationEmailToken = userRepository.GetRandomVerificationEmailToken(),
-            VerificationEmailExpires = DateTime.Now.AddDays(1)
+            VerificationEmailTokenExpires = DateTime.Now.AddDays(1)
         };
             
         if (!userRepository.CreateUser(user))
@@ -129,7 +127,8 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             return StatusCode(500, ModelState);
         }
         
-        //TODO: send list with token with smtp 
+        //TODO: should be link to frontend
+        await emailSender.SendEmailAsync(user.Email, "Confirm your email", $"Open this link: {user.VerificationEmailToken}");
         
         return Ok("Successfully created");
     }
@@ -179,9 +178,6 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
                 ModelState.AddModelError("", "Email not verified!");
                 return StatusCode(401, ModelState);
             }
-            
-            //TODO:Add smtp to verification for email
-            //TODO:Add verification if user have added a phone
             
             RefreshToken refreshToken = jwtService.GenerateRefreshToken();
 
@@ -309,12 +305,12 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         if (user == null)
             return BadRequest("Invalid Token");
 
-        if (user.VerificationEmailExpires < DateTime.Now)
+        if (user.VerificationEmailTokenExpires < DateTime.Now)
             return BadRequest("Token is Expired");
 
         user.VerificationEmailToken = null;
         user.VerifiedEmailAt = DateTime.Now;
-        user.VerificationEmailExpires = null;
+        user.VerificationEmailTokenExpires = null;
         user.EmailConfirmed = true;
 
         if (!userRepository.UpdateUser(user))
@@ -329,7 +325,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     
     //TODO:Make forgot with phone number
     [HttpPost("forgot-password-email")]
-    public async Task<IActionResult> ForgotPasswordRecoverByEmail(string userEmail)
+    public async Task<IActionResult> RecoverPasswordByEmail(string userEmail)
     {
         var email = new EmailAddressAttribute();
         if (!email.IsValid(userEmail))
@@ -346,22 +342,47 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         }
         
         user.PasswordResetToken = userRepository.GetRandomPasswordResetToken();;
-        user.PasswordResetTokenExpires = DateTime.Now.AddDays(1);
+        user.PasswordResetTokenExpires = DateTime.Now.AddHours(1);
 
         if (!userRepository.UpdateUser(user))
         {
             ModelState.AddModelError("", "Cannot update Refresh Token");
             return StatusCode(500, ModelState);
         }
-        
-        //TODO: Add smtp to send a recover password
+
+        //TODO: should be link to frontend
+        await emailSender.SendEmailAsync(user.Email, $"Password Recovery", $"Open this link: {user.PasswordResetToken}");
         
         return Ok("Open link on your email");
     }
 
+    [HttpPost("forgot-password-phone")]
+    public async Task<IActionResult> RecoverPasswordByPhoneNumber(NumberDto numberDto)
+    {
+        var user = userRepository.GetUserByNumber(numberDto);
+        if (user == null) 
+        {
+            ModelState.AddModelError("", "User not found");
+            return StatusCode(404, ModelState);
+        }
+
+        user.PasswordResetToken = phoneNumberService.GenerateCode();
+        user.PasswordResetTokenExpires = DateTime.Now.AddHours(1);
+
+        if (!userRepository.UpdateUser(user))
+        {
+            ModelState.AddModelError("", "Cannot update User. Try later");
+            return StatusCode(500, ModelState);
+        }
+        
+        //TODO: Send message to number
+
+        return Ok("Enter sms code");
+    }
+
     //TODO: Make reset-password optimised for every model of recovery(email, phone number)
     [HttpPost("reset-password")]
-    public async Task<IActionResult> ForgotPassword(ResetPasswordDto resetPasswordDto)
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
     {
         var user = userRepository.GetUserByPasswordResetToken(resetPasswordDto.Token);
 

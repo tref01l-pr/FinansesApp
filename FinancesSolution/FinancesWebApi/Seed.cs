@@ -7,7 +7,7 @@ using FinancesWebApi.Models.User.UserSettings;
 
 namespace FinancesWebApi
 {
-    public class Seed(DataContext context, IMaskConverter maskConverter)
+    public class Seed(DataContext context, IMaskConverter maskConverter, IPasswordSecurityService passwordSecurityService)
     {
         public void SeedDataContext()
         {
@@ -223,35 +223,42 @@ namespace FinancesWebApi
 
             if (!context.Users.Any())
             {
-                var users = new List<User>
+
+                var users = new List<User>();
+                
+                passwordSecurityService.CreatePasswordHash("test1", out byte[] passwordHash, out byte[] passwordSalt);
+                
+                users.Add(new User
                 {
-                    //TODO: ПЕРЕПИСАТЬ SEED ДЛЯ ВСЕХ ЮЗЕРОВ
-                    new User
+                    UserName = "roman",
+                    Email = "example@example.com",
+                    PasswordHash = passwordHash,
+                    PasswordSalt = passwordSalt,
+                    UserRoles = new List<UserRole>
                     {
-                        UserName = "roman",
-                        Email = "example@example.com",
-                        Password = BCrypt.Net.BCrypt.HashPassword("test1"),
-                        UserRoles = new List<UserRole>
-                        {
-                            new UserRole() { Role = context.Roles.First(r => r.Name == "user") },
-                            new UserRole() { Role = context.Roles.First(r => r.Name == "admin") }
-                        },
-                        EmailConfirmed = true,
-                        VerifiedEmailAt = DateTime.Now
+                        new UserRole() { Role = context.Roles.First(r => r.Name == "user") },
+                        new UserRole() { Role = context.Roles.First(r => r.Name == "admin") }
                     },
-                    new User
+                    EmailConfirmed = true,
+                    VerifiedEmailAt = DateTime.Now
+                });
+                
+                passwordSecurityService.CreatePasswordHash("test2", out passwordHash, out passwordSalt);
+                
+                users.Add(new User
+                {
+                    UserName = "john",
+                    Email = "john@example.com",
+                    PasswordHash = passwordHash,
+                    PasswordSalt = passwordSalt,
+                    UserRoles = new List<UserRole>
                     {
-                        UserName = "john",
-                        Email = "john@example.com",
-                        Password = BCrypt.Net.BCrypt.HashPassword("test2"),
-                        UserRoles = new List<UserRole>
-                        {
-                            new UserRole() { Role = context.Roles.First(r => r.Name == "user") }
-                        },
-                        EmailConfirmed = true,
-                        VerifiedEmailAt = DateTime.Now
+                        new UserRole() { Role = context.Roles.First(r => r.Name == "user") }
                     },
-                };
+                    EmailConfirmed = true,
+                    VerifiedEmailAt = DateTime.Now
+                });
+                    
 
                 foreach (var user in users)
                 {

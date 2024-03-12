@@ -10,7 +10,9 @@ namespace FinancesWebApi.Models.User
         public required string UserName { get; set; }
         public required string Email { get; set; }
         public string? VerificationEmailToken { get; set; } = string.Empty;
-        public DateTime? VerificationEmailExpires { get; set; } = null;
+        public string? ResetEmailToken { get; set; } = string.Empty;
+        public DateTime? VerificationEmailTokenExpires { get; set; } = null;
+        public DateTime? ResetEmailTokenExpires { get; set; } = null;
         public DateTime? VerifiedEmailAt { get; set; } = null;
         public bool EmailConfirmed { get; set; } = false;
         public required byte[] PasswordHash { get; set; } = new byte[60];
@@ -19,7 +21,9 @@ namespace FinancesWebApi.Models.User
         public DateTime? PasswordResetTokenExpires { get; set; } = null;
         public int? PhoneNumberId { get; set; } = null;
         public string? VerificationPhoneNumberCode { get; set; } = string.Empty;
-        public DateTime? VerificationPhoneNumberExpires { get; set; } = null;
+        public string? ResetPhoneNumberCode { get; set; } = string.Empty;
+        public DateTime? VerificationPhoneNumberCodeExpires { get; set; } = null;
+        public DateTime? ResetPhoneNumberCodeExpires { get; set; } = null;
         public DateTime? VerifiedPhoneNumberAt { get; set; } = null;
         public bool PhoneNumberConfirmed { get; set; } = false;
         public int NumberOfPasswordAttempts { get; set; } = 5;
