@@ -1,9 +1,13 @@
-﻿namespace FinancesWebApi.Dto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FinancesWebApi.Dto;
 
 public class LoginDto
 {
-    public string? UserName { get; set; } = String.Empty;
-    public string? Email { get; set; } = String.Empty;
+    public string? UserName { get; set; } = string.Empty;
+    [EmailAddress]
+    public string? Email { get; set; } = string.Empty;
     public NumberDto? Number { get; set; } = null;
-    public required string Password { get; set; }
+    [Required]
+    public string Password { get; set; } = string.Empty;
 }

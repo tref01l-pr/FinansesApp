@@ -62,4 +62,6 @@ public class JwtService(IConfiguration configuration) : IJwtService
         }, out SecurityToken validatedToken);
         return (JwtSecurityToken) validatedToken;
     }
+
+    public string GenerateRandomToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
 }

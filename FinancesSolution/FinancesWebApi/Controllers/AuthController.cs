@@ -1,11 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using AutoMapper;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models.User;
+using FinancesWebApi.Models.User.UserSettings;
+using FinancesWebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wangkanai.Detection.Services;
@@ -14,7 +17,7 @@ namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IJwtService jwtService, IDetectionService detection)
+public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IDetectionService detection)
     : ControllerBase
 {
     public class BrowserDetails
@@ -87,33 +90,51 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     [ProducesResponseType(400)]
     public IActionResult Register([FromBody] RegisterDto registerDto)
     {
+        /*var email = new EmailAddressAttribute();
+        if (!email.IsValid(registerDto.Email))
+        {
+            ModelState.AddModelError("", $"Incorrect Email address");
+            return StatusCode(422, ModelState);
+        }*/
+        
+        //TODO:implement defence from XSS attack
+        
         if (userRepository.IsUserWithEmailExists(registerDto.Email) ||
             userRepository.IsUserWithUserNameExists(registerDto.UserName))
         {
             ModelState.AddModelError("", $"This User already exists");
             return StatusCode(422, ModelState);
         }
-
-        var email = new EmailAddressAttribute();
-        if (!email.IsValid(registerDto.Email))
-        {
-            ModelState.AddModelError("", $"Incorrect Email address");
-            return StatusCode(422, ModelState);
-        }
-
+        
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var userMap = mapper.Map<User>(registerDto);
+        passwordSecurityService.CreatePasswordHash(registerDto.Password,
+            out byte[] passwordHash,
+            out byte[] passwordSalt);
 
-        if (!userRepository.CreateUser(userMap))
+        var user = new User
         {
-            ModelState.AddModelError("", $"Something went wrong saving {userMap.UserName}");
+            UserName = registerDto.UserName,
+            Email = registerDto.Email,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            VerificationEmailToken = userRepository.GetRandomVerificationEmailToken(),
+            VerificationEmailExpires = DateTime.Now.AddDays(1)
+        };
+            
+        if (!userRepository.CreateUser(user))
+        {
+            ModelState.AddModelError("", $"Something went wrong saving {user.UserName}");
             return StatusCode(500, ModelState);
         }
         
+        //TODO: send list with token with smtp 
+        
         return Ok("Successfully created");
     }
+
+    
 
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginDto loginDto)
@@ -127,21 +148,40 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             {
                 UserName = null,
                 Email = null,
-                Password = null,
+                PasswordHash = null,
+                PasswordSalt = null,
                 UserRoles = null
             };
             
-            if (loginDto.UserName != string.Empty)
+            if (!string.IsNullOrEmpty(loginDto.UserName))
                 user = userRepository.GetUserByName(loginDto.UserName);
             
-            if (loginDto.Email != string.Empty)
+            if (!string.IsNullOrEmpty(loginDto.Email))
                 user = userRepository.GetUserByEmail(loginDto.Email);
 
             if (loginDto.Number != null)
                 user = userRepository.GetUserByNumber(loginDto.Number);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "User not found");
+                return StatusCode(404, ModelState);
+            }
             
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
-                throw new Exception("Invalid UserName or Password");
+            if (!passwordSecurityService.VerifyPasswordHash(loginDto.Password, user.PasswordHash, user.PasswordSalt))
+            {
+                ModelState.AddModelError("", "Password or UserName is incorrect");
+                return StatusCode(401, ModelState);
+            }
+            
+            if (!user.EmailConfirmed || user.VerifiedEmailAt == null)
+            {
+                ModelState.AddModelError("", "Email not verified!");
+                return StatusCode(401, ModelState);
+            }
+            
+            //TODO:Add smtp to verification for email
+            //TODO:Add verification if user have added a phone
             
             RefreshToken refreshToken = jwtService.GenerateRefreshToken();
 
@@ -184,13 +224,11 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     [ProducesResponseType(400)]
     public IActionResult GetUser(int userId)
     {
-        var users = userRepository.GetUsers();
+        User? user = userRepository.GetUser(userId);
         
-        if (!userRepository.IsUserWithIdExists(userId))
-            return BadRequest(ModelState);
-
-
-        var user = userRepository.GetUser(userId);
+        if (user == null)
+            return BadRequest("User doesn't exist");
+        
         var userMap = mapper.Map<UserDto>(user);
 
         return Ok(userMap);
@@ -238,9 +276,10 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             if (deviceIdClaim == null || !int.TryParse(deviceIdClaim.Value, out int deviceId))
                 return Unauthorized("Cannot be refreshed. No deviceId in Claims");                                  //incorrect access token
         
-            device = deviceRepository.GetDeviceById(deviceId);
-        
-            if (device == null || !device.Token.Equals(deviceRepository.GetDeviceByRefreshToken(refreshToken).Token))
+            var deviceById = deviceRepository.GetDeviceById(deviceId);
+            device = deviceRepository.GetDeviceByRefreshToken(refreshToken);
+            
+            if (deviceById == null || device == null || !deviceById.Token.Equals(device.Token))
                 return Unauthorized("Invalid Refresh token");                                //fake access token
         
             if (device.TokenExpires < DateTime.Now)
@@ -262,6 +301,92 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         return Ok(newToken);
     }
 
+    [HttpPost("verifyEmail/{token}")]
+    public async Task<IActionResult> VerifyEmail(string token)
+    {
+        var user = userRepository.GetUserByVerificationEmailToken(token);
+
+        if (user == null)
+            return BadRequest("Invalid Token");
+
+        if (user.VerificationEmailExpires < DateTime.Now)
+            return BadRequest("Token is Expired");
+
+        user.VerificationEmailToken = null;
+        user.VerifiedEmailAt = DateTime.Now;
+        user.VerificationEmailExpires = null;
+        user.EmailConfirmed = true;
+
+        if (!userRepository.UpdateUser(user))
+        {
+            ModelState.AddModelError("", "Cannot update Refresh Token");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Your Email was Confirmed :)");
+    }
+
+    
+    //TODO:Make forgot with phone number
+    [HttpPost("forgot-password-email")]
+    public async Task<IActionResult> ForgotPasswordRecoverByEmail(string userEmail)
+    {
+        var email = new EmailAddressAttribute();
+        if (!email.IsValid(userEmail))
+        {
+            ModelState.AddModelError("", $"Incorrect Email address");
+            return StatusCode(422, ModelState);
+        }
+
+        var user = userRepository.GetUserByEmail(userEmail);
+        if (user == null || !user.EmailConfirmed)
+        {
+            ModelState.AddModelError("", $"User not found");
+            return StatusCode(404, ModelState);
+        }
+        
+        user.PasswordResetToken = userRepository.GetRandomPasswordResetToken();;
+        user.PasswordResetTokenExpires = DateTime.Now.AddDays(1);
+
+        if (!userRepository.UpdateUser(user))
+        {
+            ModelState.AddModelError("", "Cannot update Refresh Token");
+            return StatusCode(500, ModelState);
+        }
+        
+        //TODO: Add smtp to send a recover password
+        
+        return Ok("Open link on your email");
+    }
+
+    //TODO: Make reset-password optimised for every model of recovery(email, phone number)
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ForgotPassword(ResetPasswordDto resetPasswordDto)
+    {
+        var user = userRepository.GetUserByPasswordResetToken(resetPasswordDto.Token);
+
+        if (user == null || user.PasswordResetTokenExpires < DateTime.Now)
+        {
+            ModelState.AddModelError("", "Invalid token");
+            return StatusCode(401, ModelState);
+        }
+        
+        passwordSecurityService.CreatePasswordHash(resetPasswordDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+        
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpires = null;
+        user.PasswordHash = passwordHash;
+        user.PasswordSalt = passwordSalt;
+
+        if (!userRepository.UpdateUser(user))
+        {
+            ModelState.AddModelError("", "Cannot update Refresh Token");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Your password was updated :)");
+    }
+
     private void SetRefreshToken(RefreshToken newRefreshToken)
     {
         var cookieOptions = new CookieOptions
@@ -272,4 +397,5 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         
         Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
     }
+    
 }

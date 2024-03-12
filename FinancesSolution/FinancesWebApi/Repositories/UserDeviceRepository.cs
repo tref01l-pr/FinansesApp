@@ -6,9 +6,9 @@ namespace FinancesWebApi.Repositories;
 
 public class UserDeviceRepository(DataContext context) : IUserDeviceRepository
 {
-    public Device GetDeviceById(int deviceId) => context.Devices.FirstOrDefault(d => d.Id == deviceId)!;
+    public Device? GetDeviceById(int deviceId) => context.Devices.FirstOrDefault(d => d.Id == deviceId)!;
 
-    public Device GetDeviceByRefreshToken(string refreshToken) =>
+    public Device? GetDeviceByRefreshToken(string refreshToken) =>
         context.Devices.FirstOrDefault(d => d.Token == refreshToken)!;
 
     public List<Device> GetDevicesByUserId(int userId) => context.Devices.Where(d => d.UserId == userId).ToList();

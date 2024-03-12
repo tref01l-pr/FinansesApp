@@ -9,4 +9,5 @@ public interface IJwtService
     string Generate(User user, int deviceId);
     RefreshToken GenerateRefreshToken();
     JwtSecurityToken Verify(string jwt);
+    string GenerateRandomToken();
 }

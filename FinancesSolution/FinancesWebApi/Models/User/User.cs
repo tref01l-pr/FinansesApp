@@ -9,12 +9,21 @@ namespace FinancesWebApi.Models.User
         public int Id { get; set; }
         public required string UserName { get; set; }
         public required string Email { get; set; }
+        public string? VerificationEmailToken { get; set; } = string.Empty;
+        public DateTime? VerificationEmailExpires { get; set; } = null;
+        public DateTime? VerifiedEmailAt { get; set; } = null;
         public bool EmailConfirmed { get; set; } = false;
-        public required string Password { get; set; }
+        public required byte[] PasswordHash { get; set; } = new byte[60];
+        public required byte[] PasswordSalt { get; set; } = new byte[60];
+        public string? PasswordResetToken { get; set; } = null;
+        public DateTime? PasswordResetTokenExpires { get; set; } = null;
         public int? PhoneNumberId { get; set; } = null;
+        public string? VerificationPhoneNumberCode { get; set; } = string.Empty;
+        public DateTime? VerificationPhoneNumberExpires { get; set; } = null;
+        public DateTime? VerifiedPhoneNumberAt { get; set; } = null;
         public bool PhoneNumberConfirmed { get; set; } = false;
         public int NumberOfPasswordAttempts { get; set; } = 5;
-        public required ICollection<UserRole> UserRoles { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; }         
         public UserSettings.UserSettings UserSettings { get; set; }
         public UserPhoneNumber UserPhoneNumber { get; set; }
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
