@@ -43,6 +43,9 @@ public class Program
         builder.Services.AddTransient<Seed>();
         builder.Services.AddTransient<IJwtService, JwtService>();
         builder.Services.AddTransient<IMaskConverter, MaskConverter>();
+        builder.Services.AddTransient<IEmailSender, EmailSender>();
+        builder.Services.AddTransient<IPasswordSecurityService, PasswordSecurityService>();
+        builder.Services.AddTransient<IPhoneNumberService, PhoneNumberService>();
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();

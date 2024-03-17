@@ -55,15 +55,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     {
         try
         {
-            var jwt = Request.Cookies["jwt"];
-            var header = HttpContext.Request.Headers["Authorization"];
-            if (header != jwt)
-            {
-                return BadRequest("ERROR");
-            }
-        
             var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        
             return Ok(userRepository.GetUser(userId));
         }
         catch (Exception e)
@@ -139,7 +131,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     public IActionResult Login([FromBody] LoginDto loginDto)
     {
         if (loginDto is { UserName: "", Email: "", Number: null } || loginDto.Password == string.Empty)
-            return BadRequest(ModelState);
+            return BadRequest("Empty inputs");
 
         try
         {
@@ -155,8 +147,19 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             if (!string.IsNullOrEmpty(loginDto.UserName))
                 user = userRepository.GetUserByName(loginDto.UserName);
             
+            
+            
+
             if (!string.IsNullOrEmpty(loginDto.Email))
+            {
+                var email = new EmailAddressAttribute();
+                if (!email.IsValid(loginDto.Email))
+                {
+                    ModelState.AddModelError("", $"Incorrect Email address");
+                    return StatusCode(422, ModelState);
+                }
                 user = userRepository.GetUserByEmail(loginDto.Email);
+            }
 
             if (loginDto.Number != null)
                 user = userRepository.GetUserByNumber(loginDto.Number);

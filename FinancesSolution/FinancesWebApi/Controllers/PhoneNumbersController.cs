@@ -3,13 +3,10 @@ using AutoMapper;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
-using FinancesWebApi.Models;
 using FinancesWebApi.Models.User;
 using FinancesWebApi.Models.User.UserSettings;
-using FinancesWebApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace FinancesWebApi.Controllers;
 
@@ -32,13 +29,6 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
     [HttpPost("createUserNumber")]
     public IActionResult CreateUserNumber([FromBody] NumberDto numberDto)
     {
-        var jwt = Request.Cookies["jwt"];
-        var header = HttpContext.Request.Headers["Authorization"];
-        if (header != jwt)
-        {
-            return BadRequest("ERROR");
-        }
-        
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         
         if (numberRepository.IsNumberExists(numberDto.CountryCode, numberDto.Number))
@@ -78,8 +68,14 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
 
         user.VerificationPhoneNumberCode = phoneNumberService.GenerateCode();
         user.VerificationPhoneNumberCodeExpires = DateTime.Now.AddHours(1);
+
+        if (!userRepository.UpdateUser(user))
+        {
+            ModelState.AddModelError("", "Cannot create Number");
+            return StatusCode(500, ModelState);
+        }
         
-       //TODO: Send message to phone
+        //TODO: Send message to phone
 
         return Ok("Number was accepted");
     }
@@ -140,9 +136,15 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
             User = user
         };
 
-        if (!numberRepository.CreateUserNumber(userPhoneNumber))
+        user.UserPhoneNumber = userPhoneNumber;
+        user.VerifiedPhoneNumberAt = DateTime.Now;
+        user.PhoneNumberConfirmed = true;
+        user.VerificationPhoneNumberCode = null;
+        user.VerificationPhoneNumberCodeExpires = null;
+
+        if (!numberRepository.CreateUserNumber(userPhoneNumber) && !userRepository.UpdateUser(user))
         {
-            ModelState.AddModelError("", "Cannot create Number");
+            ModelState.AddModelError("", "Something went wrong");
             return StatusCode(500, ModelState);
         }
 
