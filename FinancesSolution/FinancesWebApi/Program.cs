@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using dotenv.net;
 using FinancesWebApi.Data;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
+using Twilio.Clients;
 
 namespace FinancesWebApi;
 
@@ -16,6 +18,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        DotNetEnv.Env.Load();
+        
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddControllers().AddJsonOptions(o =>
@@ -32,7 +36,7 @@ public class Program
                 ValidateIssuer = false,
                 ValidateLifetime = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                    builder.Configuration.GetSection("Jwt:Token").Value!))
+                    Environment.GetEnvironmentVariable("JWT_TOKEN")!))
             };
         });
         
@@ -41,15 +45,18 @@ public class Program
         builder.Services.AddDetection();
         
         builder.Services.AddTransient<Seed>();
+        builder.Services.AddHttpClient<ITwilioRestClient, TwilioClient>();
+        
         builder.Services.AddTransient<IJwtService, JwtService>();
         builder.Services.AddTransient<IMaskConverter, MaskConverter>();
         builder.Services.AddTransient<IEmailSender, EmailSender>();
         builder.Services.AddTransient<IPasswordSecurityService, PasswordSecurityService>();
-        builder.Services.AddTransient<IPhoneNumberService, PhoneNumberService>();
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();
         builder.Services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
+        builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
+        builder.Services.AddScoped<ICountryPhoneNumberRepository, CountryPhoneNumberRepository>();
 
         
         builder.Services.AddSwaggerGen(options =>

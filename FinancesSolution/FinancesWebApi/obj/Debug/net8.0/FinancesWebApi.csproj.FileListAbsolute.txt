@@ -147,3 +147,8 @@ C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\Finanses
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.Detection.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.Hosting.dll
 C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Wangkanai.System.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Twilio.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\dotenv.net.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\DotNetEnv.dll
+C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\bin\Debug\net8.0\Sprache.dll

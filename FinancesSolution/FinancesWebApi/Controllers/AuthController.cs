@@ -2,20 +2,22 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using AutoMapper;
+using dotenv.net;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
+using FinancesWebApi.Models;
 using FinancesWebApi.Models.User;
+using FinancesWebApi.Models.User.UserSettings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Wangkanai.Detection.Services;
 
 namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IPhoneNumberService phoneNumberService, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IEmailSender emailSender, IDetectionService detection)
+public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IPhoneNumberService phoneNumberService, ICountryPhoneNumberRepository countryPhoneNumberRepository, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IEmailSender emailSender, IDetectionService detection)
     : ControllerBase
 {
     public class BrowserDetails
@@ -43,14 +45,13 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         browserDetails.Add(detection.Platform.Name.ToString());
         browserDetails.Add(detection.Platform.Version.ToString());
         browserDetails.Add(detection.Platform.Processor.ToString());
-        browserDetails.Add(HttpContext.Connection.RemoteIpAddress.ToString());
+        browserDetails.Add(HttpContext.Connection.RemoteIpAddress.ToString()); 
+        browserDetails.Add(Request.Headers["Accept-Language"].ToString());
         
         return Ok(browserDetails);
     }
-
     
-    
-    [HttpGet, Authorize(Roles = "user, admin")]
+    [HttpGet("GetUser"), Authorize(Roles = "user, admin")]
     public ActionResult<string> GetMyName()
     {
         try
@@ -125,8 +126,6 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         return Ok("Successfully created");
     }
 
-    
-
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginDto loginDto)
     {
@@ -146,9 +145,6 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             
             if (!string.IsNullOrEmpty(loginDto.UserName))
                 user = userRepository.GetUserByName(loginDto.UserName);
-            
-            
-            
 
             if (!string.IsNullOrEmpty(loginDto.Email))
             {
@@ -344,7 +340,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             return StatusCode(404, ModelState);
         }
         
-        user.PasswordResetToken = userRepository.GetRandomPasswordResetToken();;
+        user.PasswordResetToken = userRepository.GetRandomPasswordResetToken();
         user.PasswordResetTokenExpires = DateTime.Now.AddHours(1);
 
         if (!userRepository.UpdateUser(user))
@@ -369,6 +365,14 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             return StatusCode(404, ModelState);
         }
 
+        var countryPhoneNumber = countryPhoneNumberRepository.GetCountryPhoneNumber(numberDto.CountryCode);
+
+        if (countryPhoneNumber == null)
+        {
+            ModelState.AddModelError("", "Country Code not found");
+            return StatusCode(404, ModelState);
+        }
+        
         user.PasswordResetToken = phoneNumberService.GenerateCode();
         user.PasswordResetTokenExpires = DateTime.Now.AddHours(1);
 
@@ -378,9 +382,19 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             return StatusCode(500, ModelState);
         }
         
-        //TODO: Send message to number
+        var smsModel = new SmsModel
+        {
+            To = countryPhoneNumber.DialCode + numberDto.Number,
+            From = "+48732071811",
+            Message = user.PasswordResetToken!
+        };
 
-        return Ok("Enter sms code");
+        if (await phoneNumberService.SendSms(smsModel))
+        {
+            ModelState.AddModelError("", "Something went wrong while sending message");
+            return StatusCode(500, ModelState);
+        }
+        return Ok("Success");
     }
 
     //TODO: Make reset-password optimised for every model of recovery(email, phone number)
