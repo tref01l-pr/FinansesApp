@@ -2,14 +2,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using AutoMapper;
-using dotenv.net;
 using FinancesWebApi.Dto;
 using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
 using FinancesWebApi.Models.User;
-using FinancesWebApi.Models.User.UserSettings;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wangkanai.Detection.Services;
 
@@ -17,7 +14,15 @@ namespace FinancesWebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IUserRepository userRepository, IUserDeviceRepository deviceRepository, IPhoneNumberService phoneNumberService, ICountryPhoneNumberRepository countryPhoneNumberRepository, IMapper mapper, IPasswordSecurityService passwordSecurityService, IJwtService jwtService, IEmailSender emailSender, IDetectionService detection)
+public class AuthController(IUserRepository userRepository,
+    IUserDeviceRepository deviceRepository, 
+    IPhoneNumberService phoneNumberService, 
+    ICountryPhoneNumberRepository countryPhoneNumberRepository, 
+    IMapper mapper, 
+    IPasswordSecurityService passwordSecurityService, 
+    IJwtService jwtService, 
+    IEmailSender emailSender, 
+    IDetectionService detection)
     : ControllerBase
 {
     public class BrowserDetails
@@ -51,21 +56,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
         return Ok(browserDetails);
     }
     
-    [HttpGet("GetUser"), Authorize(Roles = "user, admin")]
-    public ActionResult<string> GetMyName()
-    {
-        try
-        {
-            var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            return Ok(userRepository.GetUser(userId));
-        }
-        catch (Exception e)
-        {
-            ModelState.AddModelError("", $"Something went wrong {e}");
-            return StatusCode(500, ModelState);
-        }
-        
-    }
+    
     
     //var userName = User?.Identity?.Name;
     //var roleClaims = User?.FindAll(ClaimTypes.Role);
@@ -106,8 +97,8 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
 
         var user = new User
         {
-            UserName = registerDto.UserName,
-            Email = registerDto.Email,
+            UserName = registerDto.UserName.ToLower(),
+            Email = registerDto.Email.ToLower(),
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             VerificationEmailToken = userRepository.GetRandomVerificationEmailToken(),
@@ -131,7 +122,7 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     {
         if (loginDto is { UserName: "", Email: "", Number: null } || loginDto.Password == string.Empty)
             return BadRequest("Empty inputs");
-
+        
         try
         {
             var user = new User
@@ -201,10 +192,10 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             }
             
             //TODO: Can be incorrect value if it will be used by many people?
-            string token = jwtService.Generate(user, device.Id);
+            AccessToken token = jwtService.Generate(user, device.Id);
             
             SetRefreshToken(refreshToken);
-
+            
             return Ok(token);
         }
         catch (Exception e)
@@ -217,9 +208,9 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     [HttpGet("{userId}")]
     [ProducesResponseType(200, Type = typeof(User))]
     [ProducesResponseType(400)]
-    public IActionResult GetUser(int userId)
+    public async Task<IActionResult> GetUser(int userId)
     {
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         
         if (user == null)
             return BadRequest("User doesn't exist");
@@ -276,12 +267,12 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
             
             if (deviceById == null || device == null || !deviceById.Token.Equals(device.Token))
                 return Unauthorized("Invalid Refresh token");                                //fake access token
-        
+
             if (device.TokenExpires < DateTime.Now)
-                return Unauthorized("Token expired.");
+                return await RefreshToken(string.Empty);
         }
         
-        string newToken = jwtService.Generate(userRepository.GetUser(userId)!, device.Id);
+        AccessToken newToken = jwtService.Generate(await userRepository.GetUserAsync(userId)!, device.Id);
 
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
@@ -429,8 +420,10 @@ public class AuthController(IUserRepository userRepository, IUserDeviceRepositor
     {
         var cookieOptions = new CookieOptions
         {
+            Secure = true,
             HttpOnly = true,
-            Expires = newRefreshToken.Expires
+            Expires = newRefreshToken.Expires,
+            SameSite = SameSiteMode.Lax
         };
         
         Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);

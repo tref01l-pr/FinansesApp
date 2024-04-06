@@ -6,5 +6,5 @@ public interface ICountryPhoneNumberRepository
 {
     public bool IsCountryCodeExists(string countryCode);
     public CountryPhoneNumber? GetCountryPhoneNumber(string countryCode);
-    public ICollection<CountryPhoneNumber> GetCountryPhoneNumbers();
+    public ICollection<CountryPhoneNumber>? GetCountryPhoneNumbers();
 }

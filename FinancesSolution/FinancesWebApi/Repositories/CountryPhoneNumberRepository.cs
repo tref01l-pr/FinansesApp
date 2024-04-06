@@ -12,6 +12,6 @@ public class CountryPhoneNumberRepository(DataContext context) : ICountryPhoneNu
     public CountryPhoneNumber? GetCountryPhoneNumber(string countryCode) => 
         context.CountryPhoneNumbers.FirstOrDefault(n => n.Code == countryCode);
 
-    public ICollection<CountryPhoneNumber> GetCountryPhoneNumbers() => 
+    public ICollection<CountryPhoneNumber>? GetCountryPhoneNumbers() => 
         context.CountryPhoneNumbers.OrderBy(n => n.Name).ToList();
 }

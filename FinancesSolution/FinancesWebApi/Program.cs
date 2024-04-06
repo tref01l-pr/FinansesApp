@@ -53,8 +53,10 @@ public class Program
         builder.Services.AddTransient<IPasswordSecurityService, PasswordSecurityService>();
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();
+        builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         builder.Services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
+        builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+        builder.Services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();
         builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
         builder.Services.AddScoped<ICountryPhoneNumberRepository, CountryPhoneNumberRepository>();
 
@@ -69,6 +71,19 @@ public class Program
             });
 
             options.OperationFilter<SecurityRequirementsOperationFilter>();
+        });
+        
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("Any", corsPolicyBuilder =>
+            {
+                corsPolicyBuilder
+                    .WithOrigins(new [] {"http://localhost:5173", "https://localhost:5173", "http://localhost:5174"}) 
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials(); 
+            });
+
         });
         
         builder.Services.AddDbContext<DataContext>(options =>
@@ -104,6 +119,8 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+        
+        app.UseCors("Any");
 
         app.MapControllers();
 

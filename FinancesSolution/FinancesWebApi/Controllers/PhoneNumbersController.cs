@@ -7,8 +7,9 @@ using FinancesWebApi.Models;
 using FinancesWebApi.Models.User;
 using FinancesWebApi.Models.User.UserSettings;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Task = Twilio.TwiML.Voice.Task;
 
 namespace FinancesWebApi.Controllers;
 
@@ -16,6 +17,39 @@ namespace FinancesWebApi.Controllers;
 [ApiController]
 public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUserRepository userRepository, IUserDeviceRepository userDeviceRepository, IPhoneNumberService phoneNumberService, IPhoneNumberRepository phoneNumberRepository, ICountryPhoneNumberRepository countryPhoneNumberRepository, IMapper mapper, IMaskConverter maskConverter) : ControllerBase
 {
+    [HttpPost("test")]
+    public async Task<IActionResult> Test([FromBody] NumberDto numberDto)
+    {
+        var countryPhoneNumber = countryPhoneNumberRepository.GetCountryPhoneNumber(numberDto.CountryCode);
+        
+        if (countryPhoneNumber == null)                        
+        {
+            ModelState.AddModelError("", $"No country with code {numberDto.CountryCode}");
+            return StatusCode(404, ModelState);
+        }
+
+        if (!maskConverter.NumberIsValid(countryPhoneNumber.Mask, numberDto.Number))
+        {
+            ModelState.AddModelError("", "Incorrect number format");
+            return StatusCode(422, ModelState);
+        }
+        
+        var smsModel = new SmsModel
+        {
+            To = countryPhoneNumber.DialCode + numberDto.Number,
+            From = "+48732071811",
+            Message = "Your verification code " + phoneNumberService.GenerateCode()
+        };
+
+        if (!await phoneNumberService.SendSms(smsModel))
+        {
+            ModelState.AddModelError("", "Something went wrong while sending message");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Success");
+    }
+    
     [HttpGet("getCountriesNumbersWithMasks")]
     public IActionResult GetCountriesNumbersWithMasks()
     {
@@ -39,7 +73,7 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
             return StatusCode(409, ModelState);
         }
 
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         
         if (user == null)
         {
@@ -108,7 +142,7 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
         
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         Device? userDevice = userDeviceRepository.GetDeviceByRefreshToken(refreshToken);
         
         if (user == null || userDevice == null || user.Id != userDevice.UserId)
@@ -181,7 +215,7 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
         
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         Device? userDevice = userDeviceRepository.GetDeviceByRefreshToken(refreshToken);
         
         if (user == null || userDevice == null || user.Id != userDevice.UserId)
@@ -244,10 +278,10 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
 
     [Authorize]
     [HttpGet("check-reset-phone-number-code")]
-    public IActionResult CheckResetUserPhoneNumber(string code)
+    public async Task<IActionResult> CheckResetUserPhoneNumber(string code)
     {
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var user = userRepository.GetUser(userId);
+        var user = await userRepository.GetUserAsync(userId);
         if (user == null)
         {
             ModelState.AddModelError("", "User not found");
@@ -276,7 +310,7 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
         
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         Device? userDevice = userDeviceRepository.GetDeviceByRefreshToken(refreshToken);
         
         if (user == null || 
@@ -347,7 +381,7 @@ public class PhoneNumbersController(IPhoneNumberRepository numberRepository, IUs
         
         var userId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         
-        User? user = userRepository.GetUser(userId);
+        User? user = await userRepository.GetUserAsync(userId);
         Device? userDevice = userDeviceRepository.GetDeviceByRefreshToken(refreshToken);
         
         if (user == null || 

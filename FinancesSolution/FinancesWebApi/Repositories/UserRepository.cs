@@ -13,11 +13,11 @@ public class UserRepository(DataContext context, IJwtService jwtService) : IUser
 {
     public ICollection<User> GetUsers() => context.Users.OrderBy(u => u.Id).ToList();
 
-    public User? GetUser(int userId) =>
-        context.Users
+    public Task<User?> GetUserAsync(int userId) =>
+        Task.FromResult(context.Users
             .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .FirstOrDefault(u => u.Id == userId);
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefault(u => u.Id == userId));
 
     public User? GetUserByName(string userName) =>
         context.Users

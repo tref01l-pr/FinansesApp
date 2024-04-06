@@ -7,7 +7,7 @@ namespace FinancesWebApi.Interfaces;
 public interface IUserRepository
 {
     ICollection<User> GetUsers();
-    User? GetUser(int userId);
+    Task<User?> GetUserAsync(int userId);
     User? GetUserByName(string userName);
     User? GetUserByEmail(string email);
     User? GetUserByNumber(NumberDto numberDto);

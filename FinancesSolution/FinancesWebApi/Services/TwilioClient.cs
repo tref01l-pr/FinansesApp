@@ -1,5 +1,4 @@
-﻿using dotenv.net;
-using Twilio.Clients;
+﻿using Twilio.Clients;
 using Twilio.Http;
 using HttpClient = Twilio.Http.HttpClient;
 

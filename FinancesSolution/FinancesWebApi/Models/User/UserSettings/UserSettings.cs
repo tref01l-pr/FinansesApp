@@ -19,5 +19,5 @@ public class UserSettings
     public string FirstDayOfWeek { get; set; } = "Monday";
     public string Currency { get; set; } = "USD";
     public Account DefaultAccount { get; set; }
-    public Models.User.User User { get; set; }
+    public User User { get; set; }
 }

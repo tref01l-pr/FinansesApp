@@ -13,6 +13,8 @@ public class MappingProfiles : Profile
         CreateMap<User, UserDto>();
         CreateMap<RegisterDto, User>();
 
+        CreateMap<UserSettings, UserSettingsDto>();
+
         CreateMap<CountryPhoneNumber, NumberWithMaskDto>();
         CreateMap<NumberDto, UserPhoneNumber>();
     }

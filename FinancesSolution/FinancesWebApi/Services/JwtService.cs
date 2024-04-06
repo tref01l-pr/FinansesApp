@@ -9,9 +9,17 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FinancesWebApi.Services;
 
-public class JwtService(IConfiguration configuration) : IJwtService
+public class JwtService : IJwtService
 {
-    public string Generate(User user, int deviceId)
+    private string _jwt;
+    public JwtService()
+    {
+        DotNetEnv.Env.Load();
+
+        _jwt = Environment.GetEnvironmentVariable("JWT_TOKEN") ?? throw new Exception("JWT_TOKEN is not set in .env file.");
+    }
+    
+    public AccessToken Generate(User? user, int deviceId)
     {
         List<Claim> claims = new List<Claim>
         {
@@ -23,19 +31,27 @@ public class JwtService(IConfiguration configuration) : IJwtService
             claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            configuration.GetSection("Jwt:Token").Value!));
+            _jwt));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
+        var created = DateTime.Now;
+        var expires = created.AddHours(2);
+        
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.Now.AddHours(2),
+            expires: expires,
             signingCredentials: creds
         );
 
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return jwt;
+        return new AccessToken
+        {
+            Token = jwt,
+            Created = created,
+            Expires = expires
+        };
     }
 
     public RefreshToken GenerateRefreshToken()
@@ -52,7 +68,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
     public JwtSecurityToken Verify(string jwt)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(configuration.GetSection("Jwt:Token").Value!);
+        var key = Encoding.ASCII.GetBytes(_jwt);
         tokenHandler.ValidateToken(jwt, new TokenValidationParameters
         {
             IssuerSigningKey = new SymmetricSecurityKey(key),

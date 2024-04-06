@@ -23,4 +23,17 @@ public class PasswordSecurityService : IPasswordSecurityService
 
         return hashedPassword.Equals(hashedPasswordFromBytes);
     }
+    
+    public string EncodeEmail(string email)
+    {
+        var emailParts = email.Split('@');
+        StringBuilder resultBuilder = new StringBuilder();
+    
+        int lengthToTake = Math.Min(emailParts[0].Length, 1);
+        resultBuilder.Append(emailParts[0], 0, lengthToTake);
+        resultBuilder.Append("********");
+        resultBuilder.Append('@').Append(emailParts[1]);
+
+        return resultBuilder.ToString();
+    }
 }

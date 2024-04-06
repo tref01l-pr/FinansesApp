@@ -1,4 +1,5 @@
-﻿using FinancesWebApi.Interfaces.Services;
+﻿using System.Text;
+using FinancesWebApi.Interfaces.Services;
 
 namespace FinancesWebApi.Services;
 
@@ -34,4 +35,6 @@ public class MaskConverter : IMaskConverter
 
         return !maskToCompare.Where((t, i) => t != '#' && t != number[i]).Any();
     }
+
+    
 }
