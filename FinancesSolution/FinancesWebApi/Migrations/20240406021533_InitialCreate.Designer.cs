@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinancesWebApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240317202201_InitialCreate")]
+    [Migration("20240406021533_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -495,6 +495,10 @@ namespace FinancesWebApi.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Currency")
                         .IsRequired()

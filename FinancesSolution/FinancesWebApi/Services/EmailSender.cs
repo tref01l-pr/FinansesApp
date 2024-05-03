@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
-using dotenv.net;
+using DotNetEnv;
 using FinancesWebApi.Interfaces.Services;
 
 namespace FinancesWebApi.Services;
@@ -14,7 +14,7 @@ public class EmailSender : IEmailSender
 
     public EmailSender()
     {
-        DotNetEnv.Env.Load();
+        Env.Load();
 
         _mail = Environment.GetEnvironmentVariable("SMTP_USER") ?? throw new Exception("SMTP_USER is not set in .env file.");
         _password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? throw new Exception("SMTP_PASSWORD is not set in .env file.");

@@ -7,6 +7,7 @@ using FinancesWebApi.Interfaces;
 using FinancesWebApi.Interfaces.Services;
 using FinancesWebApi.Models;
 using FinancesWebApi.Models.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wangkanai.Detection.Services;
 
@@ -120,7 +121,7 @@ public class AuthController(IUserRepository userRepository,
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginDto loginDto)
     {
-        if (loginDto is { UserName: "", Email: "", Number: null } || loginDto.Password == string.Empty)
+        if (loginDto is { UserName: "", Email: "", PhoneNumber: null } || loginDto.Password == string.Empty)
             return BadRequest("Empty inputs");
         
         try
@@ -148,8 +149,8 @@ public class AuthController(IUserRepository userRepository,
                 user = userRepository.GetUserByEmail(loginDto.Email);
             }
 
-            if (loginDto.Number != null)
-                user = userRepository.GetUserByNumber(loginDto.Number);
+            if (loginDto.PhoneNumber != null)
+                user = userRepository.GetUserByNumber(loginDto.PhoneNumber);
 
             if (user == null)
             {
@@ -205,19 +206,45 @@ public class AuthController(IUserRepository userRepository,
         }
     }
 
-    [HttpGet("{userId}")]
-    [ProducesResponseType(200, Type = typeof(User))]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> GetUser(int userId)
+    [HttpPost("logOut")]
+    [Authorize]
+    public IActionResult Logout(string jwtToken = "")
     {
-        User? user = await userRepository.GetUserAsync(userId);
+        string? refreshToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized("Cannot log out");
         
-        if (user == null)
-            return BadRequest("User doesn't exist");
+        Response.Cookies.Delete("refreshToken");
         
-        var userMap = mapper.Map<UserDto>(user);
+        int userId = 0;
+        Device? device = null;
 
-        return Ok(userMap);
+        if (string.IsNullOrEmpty(jwtToken))
+            return Unauthorized("Cannot do logout");
+        
+        JwtSecurityToken token = jwtService.Verify(jwtToken);
+            
+        var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out userId))
+            return Unauthorized("Cannot LogOut. No userId in Claims");                                  //incorrect access token
+
+        var deviceIdClaim = token.Claims.FirstOrDefault(c => c.Type == "deviceId");
+        if (deviceIdClaim == null || !int.TryParse(deviceIdClaim.Value, out int deviceId))
+            return Unauthorized("Cannot LogOut. No deviceId in Claims");                                  //incorrect access token
+        
+        var deviceById = deviceRepository.GetDeviceById(deviceId);
+        device = deviceRepository.GetDeviceByRefreshToken(refreshToken);
+        
+        if (deviceById == null || device == null || !deviceById.Token.Equals(device.Token))
+            return Unauthorized("Invalid Access token");                                //fake access token
+
+        if (deviceRepository.DeleteDevice(device))
+        {
+            ModelState.AddModelError("", "Something went wrong");
+            StatusCode(500, ModelState);
+        }
+        
+        return Ok("Success");
     }
 
     [HttpPost("refreshToken")]

@@ -88,11 +88,16 @@ public class UserRepository(DataContext context, IJwtService jwtService) : IUser
         };
 
         context.Add(userRole);
-
+        
+        string imagePath = @"C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\Data\DefaultImage.jpg";
+        byte[] imageBytes = File.ReadAllBytes(imagePath);
+        string imageBase64 = Convert.ToBase64String(imageBytes);
+        
         UserSettings userSettings = new UserSettings()
         {
             NickName = user.UserName,
             DateOfRegistration = DateTime.Now,
+            AvatarImage = imageBase64,
             User = user
         };
 

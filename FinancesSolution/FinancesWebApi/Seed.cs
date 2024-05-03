@@ -258,8 +258,11 @@ namespace FinancesWebApi
                     EmailConfirmed = true,
                     VerifiedEmailAt = DateTime.Now
                 });
-                    
 
+                string imagePath = @"C:\Users\prots\Desktop\Everything that was at old Windows\RiderProjects\FinansesApp\FinancesSolution\FinancesWebApi\Data\DefaultImage.jpg";
+                byte[] imageBytes = File.ReadAllBytes(imagePath);
+                string imageBase64 = Convert.ToBase64String(imageBytes);
+                    
                 foreach (var user in users)
                 {
                     var userSettings = new UserSettings
@@ -272,6 +275,7 @@ namespace FinancesWebApi
                         DecimalSeparator = ".",
                         FirstDayOfWeek = "Monday",
                         Currency = "USD",
+                        AvatarImage = imageBase64,
                         User = user
                     };
 

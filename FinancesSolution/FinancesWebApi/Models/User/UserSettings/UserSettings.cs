@@ -18,6 +18,8 @@ public class UserSettings
     public string DecimalSeparator { get; set; } = ".";
     public string FirstDayOfWeek { get; set; } = "Monday";
     public string Currency { get; set; } = "USD";
+    public string AvatarImage { get; set; }
+    
     public Account DefaultAccount { get; set; }
     public User User { get; set; }
 }

@@ -14,4 +14,5 @@ public class UserSettingsDto
     public string DecimalSeparator { get; set; }
     public string FirstDayOfWeek { get; set; }
     public string Currency { get; set; }
+    public string AvatarImage { get; set; }
 }

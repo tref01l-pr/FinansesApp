@@ -47,10 +47,10 @@ public class Program
         builder.Services.AddTransient<Seed>();
         builder.Services.AddHttpClient<ITwilioRestClient, TwilioClient>();
         
-        builder.Services.AddTransient<IJwtService, JwtService>();
-        builder.Services.AddTransient<IMaskConverter, MaskConverter>();
-        builder.Services.AddTransient<IEmailSender, EmailSender>();
-        builder.Services.AddTransient<IPasswordSecurityService, PasswordSecurityService>();
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IMaskConverter, MaskConverter>();
+        builder.Services.AddScoped<IEmailSender, EmailSender>();
+        builder.Services.AddScoped<IPasswordSecurityService, PasswordSecurityService>();
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
@@ -61,7 +61,7 @@ public class Program
         builder.Services.AddScoped<ICountryPhoneNumberRepository, CountryPhoneNumberRepository>();
 
         
-        builder.Services.AddSwaggerGen(options =>
+        /*builder.Services.AddSwaggerGen(options =>
         {
             options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
             {
@@ -71,7 +71,7 @@ public class Program
             });
 
             options.OperationFilter<SecurityRequirementsOperationFilter>();
-        });
+        });*/
         
         builder.Services.AddCors(options =>
         {

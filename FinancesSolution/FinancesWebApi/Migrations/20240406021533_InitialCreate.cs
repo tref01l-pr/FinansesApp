@@ -316,7 +316,8 @@ namespace FinancesWebApi.Migrations
                     Theme = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DecimalSeparator = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstDayOfWeek = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AvatarImage = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
